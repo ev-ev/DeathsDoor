@@ -78,7 +78,7 @@ public abstract class ServerPlayerEntityMixin extends LivingEntityMixin {
         applyStatuses();
         player.playSoundToPlayer(SoundEvent.of(Identifier.of("block.bell.use")), SoundCategory.PLAYERS, 1.0f, 0.8f);
         //new DDisplayEntity(player); //TODO add text particle?
-        if (source != null && source.getAttacker() != null) {
+        if (source != null && source.getAttacker() != null && !source.getAttacker().equals(player)) {
             if (source.getAttacker().isPlayer()) {
                 PlayerEntity attacker = (PlayerEntity) source.getAttacker();
                 attacker.playSoundToPlayer(SoundEvent.of(Identifier.of("block.glass.break")),
