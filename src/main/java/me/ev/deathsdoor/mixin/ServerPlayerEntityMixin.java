@@ -6,11 +6,14 @@ import net.minecraft.entity.effect.StatusEffect;
 import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.particle.ParticleTypes;
 import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvent;
+import net.minecraft.text.Style;
+import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.spongepowered.asm.mixin.Mixin;
@@ -23,6 +26,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 
 import static me.ev.deathsdoor.DeathsDoor.DD;
 import static me.ev.deathsdoor.DeathsDoor.ddHealth;
@@ -68,24 +72,29 @@ public abstract class ServerPlayerEntityMixin extends LivingEntityMixin {
     }
 
     /**
-     * Clamp player health to the threshold (so they don't die if the health was set to zero for example), apply status
-     * effects (including {@link DeathsDoorEffect}) and play sounds to player (and attacker if any).
+     * If the player ever has health above the threshold, leave death's door. If they ever happen to be on or below it
+     * (e.g. reconnecting after disconnecting on death's door) put them on death's door.
      */
-    @Unique
-    private void onDeathsDoor(DamageSource source) {
-        isOnDeathsDoor = true;
-        player.setHealth(ddHealth);
-        applyStatuses();
-        player.playSoundToPlayer(SoundEvent.of(Identifier.of("block.bell.use")), SoundCategory.PLAYERS, 1.0f, 0.8f);
-        //new DDisplayEntity(player); //TODO add text particle?
-        if (source != null && source.getAttacker() != null && !source.getAttacker().equals(player)) {
-            if (source.getAttacker().isPlayer()) {
-                PlayerEntity attacker = (PlayerEntity) source.getAttacker();
-                attacker.playSoundToPlayer(SoundEvent.of(Identifier.of("block.glass.break")),
-                        SoundCategory.PLAYERS,
-                        1.0f,
-                        0.8f);
-            }
+    @Override
+    public void injectBaseTick(CallbackInfo c1) {
+        float h = player.getHealth();
+        if (h > ddHealth && isOnDeathsDoor) {
+            leaveDeathsDoor();
+        }
+        if (h <= ddHealth && !isOnDeathsDoor) {
+            onDeathsDoor(null);
+        }
+
+        if (isOnDeathsDoor) {
+            player.getServerWorld().spawnParticles(ParticleTypes.RAID_OMEN,
+                    player.getX(),
+                    player.getY(),
+                    player.getZ(),
+                    1,
+                    0.0,
+                    1.0,
+                    0.0,
+                    1.0);
         }
     }
 
@@ -140,21 +149,6 @@ public abstract class ServerPlayerEntityMixin extends LivingEntityMixin {
     }
 
     /**
-     * If the player ever has health above the threshold, leave death's door. If they ever happen to be on or below it
-     * (e.g. reconnecting after disconnecting on death's door) put them on death's door.
-     */
-    @Override
-    public void injectBaseTick(CallbackInfo c1) {
-        float h = player.getHealth();
-        if (h > ddHealth && isOnDeathsDoor) {
-            leaveDeathsDoor();
-        }
-        if (h <= ddHealth && !isOnDeathsDoor) {
-            onDeathsDoor(null);
-        }
-    }
-
-    /**
      * Clear bad (infinite) statuses from death's door and apply penalty statuses
      */
     @Unique
@@ -162,6 +156,52 @@ public abstract class ServerPlayerEntityMixin extends LivingEntityMixin {
         isOnDeathsDoor = false;
         clearStatuses();
         applyPenalty();
+        player.getServerWorld().spawnParticles(ParticleTypes.TRIAL_OMEN,
+                player.getX(),
+                player.getY(),
+                player.getZ(),
+                10,
+                0.0,
+                1.0,
+                0.0,
+                2.0);
+    }
+
+    /**
+     * Clamp player health to the threshold (so they don't die if the health was set to zero for example), apply status
+     * effects (including {@link DeathsDoorEffect}) and play sounds to player (and attacker if any).
+     */
+    @Unique
+    private void onDeathsDoor(DamageSource source) {
+        isOnDeathsDoor = true;
+        player.setHealth(ddHealth);
+        applyStatuses();
+        player.playSoundToPlayer(SoundEvent.of(Identifier.of("block.bell.use")), SoundCategory.PLAYERS, 1.0f, 0.8f);
+        //new DDisplayEntity(player); //TODO add text particle?
+        player.getServerWorld().spawnParticles(ParticleTypes.RAID_OMEN,
+                player.getX(),
+                player.getY(),
+                player.getZ(),
+                10,
+                0.0,
+                1.0,
+                0.0,
+                2.0);
+
+        Objects.requireNonNull(player.getServer()).getPlayerManager()
+               .broadcast(Text.of(player.getName().getString() + " is on death's door!").getWithStyle(
+                       Style.EMPTY.withColor(0xd12c2c)).getFirst(), true);
+        //SentMessage.of(SignedMessage.ofUnsigned(player.getDamageTracker().getDeathMessage().toString())).send
+        // (player.getServerWorld(), false, MessageType.CHAT);
+        if (source != null && source.getAttacker() != null && !source.getAttacker().equals(player)) {
+            if (source.getAttacker().isPlayer()) {
+                PlayerEntity attacker = (PlayerEntity) source.getAttacker();
+                attacker.playSoundToPlayer(SoundEvent.of(Identifier.of("block.glass.break")),
+                        SoundCategory.PLAYERS,
+                        1.0f,
+                        0.8f);
+            }
+        }
     }
 
     /**
