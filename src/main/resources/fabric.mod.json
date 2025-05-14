@@ -17,10 +17,17 @@
 	"entrypoints": {
 		"main": [
 			"me.ev.deathsdoor.DeathsDoor"
+		],
+		"client": [
+			"me.ev.deathsdoor.DeathsDoorClient"
 		]
 	},
 	"mixins": [
-		"deaths-door.mixins.json"
+		"deaths-door.mixins.json",
+		{
+			"config": "deaths-door.client.mixins.json",
+			"environment": "client"
+		}
 	],
 	"depends": {
 		"fabricloader": ">=0.16.14",

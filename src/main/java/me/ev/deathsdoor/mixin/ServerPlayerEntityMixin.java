@@ -12,9 +12,6 @@ import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvent;
-import net.minecraft.text.Style;
-import net.minecraft.text.Text;
-import net.minecraft.util.Identifier;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -28,23 +25,14 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 
-import static me.ev.deathsdoor.DeathsDoor.DD;
-import static me.ev.deathsdoor.DeathsDoor.ddHealth;
-import static net.minecraft.entity.effect.StatusEffects.*;
+import static me.ev.deathsdoor.DeathsDoor.*;
+import static net.minecraft.entity.effect.StatusEffects.REGENERATION;
+import static net.minecraft.entity.effect.StatusEffects.WITHER;
 
 @Mixin(ServerPlayerEntity.class)
 public abstract class ServerPlayerEntityMixin extends LivingEntityMixin {
     @Unique
     private final ServerPlayerEntity player = (ServerPlayerEntity) (Object) this;
-    @Unique
-    private final List<ImmutablePair<RegistryEntry<StatusEffect>, Integer>> effects = List.of(ImmutablePair.of(DD, 0),
-            ImmutablePair.of(DARKNESS, 0),
-            ImmutablePair.of(SLOWNESS, 1),
-            ImmutablePair.of(WEAKNESS, 0),
-            ImmutablePair.of(MINING_FATIGUE, 1));
-    @Unique
-    private final List<ImmutablePair<RegistryEntry<StatusEffect>, Integer>> penalty_effects =
-            List.of(ImmutablePair.of(HUNGER, 1), ImmutablePair.of(SLOWNESS, 0), ImmutablePair.of(MINING_FATIGUE, 0));
     @Unique
     boolean isOnDeathsDoor = false;
     @Unique
@@ -99,14 +87,37 @@ public abstract class ServerPlayerEntityMixin extends LivingEntityMixin {
     }
 
     /**
-     * Apply status effects (and remove regeneration as that would break the balance of the mod)
+     * Clamp player health to the threshold (so they don't die if the health was set to zero for example), apply status
+     * effects (including {@link DeathsDoorEffect}) and play sounds to player (and attacker if any).
      */
     @Unique
-    private void applyStatuses() {
-        player.removeStatusEffect(REGENERATION); //Hacky but regeneration is too strong
-        for (ImmutablePair<RegistryEntry<StatusEffect>, Integer> entry : effects) {
-            player.removeStatusEffect(entry.left);
-            player.addStatusEffect(new StatusEffectInstance(entry.left, -1, entry.right, false, false, false), player);
+    private void onDeathsDoor(DamageSource source) {
+        isOnDeathsDoor = true;
+        player.setHealth(ddHealth);
+        applyStatuses();
+        player.playSoundToPlayer(SoundEvent.of(CONFIG.ddSound()), SoundCategory.PLAYERS, 1.0f, 0.8f);
+        //new DDisplayEntity(player); //TODO add text particle?
+        player.getServerWorld().spawnParticles(ParticleTypes.RAID_OMEN,
+                player.getX(),
+                player.getY(),
+                player.getZ(),
+                10,
+                0.0,
+                1.0,
+                0.0,
+                2.0);
+
+        if (!CONFIG.ddTranslation().isEmpty())
+            Objects.requireNonNull(player.getServer()).getPlayerManager()
+                   .broadcast(CONFIG.ddMessage(player.getName()), true);
+        if (source != null && source.getAttacker() != null && !source.getAttacker().equals(player)) {
+            if (source.getAttacker().isPlayer()) {
+                PlayerEntity attacker = (PlayerEntity) source.getAttacker();
+                attacker.playSoundToPlayer(SoundEvent.of(CONFIG.ddAttackerSound()),
+                        SoundCategory.PLAYERS,
+                        1.0f,
+                        0.8f);
+            }
         }
     }
 
@@ -168,39 +179,14 @@ public abstract class ServerPlayerEntityMixin extends LivingEntityMixin {
     }
 
     /**
-     * Clamp player health to the threshold (so they don't die if the health was set to zero for example), apply status
-     * effects (including {@link DeathsDoorEffect}) and play sounds to player (and attacker if any).
+     * Apply status effects (and remove regeneration as that would break the balance of the mod)
      */
     @Unique
-    private void onDeathsDoor(DamageSource source) {
-        isOnDeathsDoor = true;
-        player.setHealth(ddHealth);
-        applyStatuses();
-        player.playSoundToPlayer(SoundEvent.of(Identifier.of("block.bell.use")), SoundCategory.PLAYERS, 1.0f, 0.8f);
-        //new DDisplayEntity(player); //TODO add text particle?
-        player.getServerWorld().spawnParticles(ParticleTypes.RAID_OMEN,
-                player.getX(),
-                player.getY(),
-                player.getZ(),
-                10,
-                0.0,
-                1.0,
-                0.0,
-                2.0);
-
-        Objects.requireNonNull(player.getServer()).getPlayerManager()
-               .broadcast(Text.of(player.getName().getString() + " is on death's door!").getWithStyle(
-                       Style.EMPTY.withColor(0xd12c2c)).getFirst(), true);
-        //SentMessage.of(SignedMessage.ofUnsigned(player.getDamageTracker().getDeathMessage().toString())).send
-        // (player.getServerWorld(), false, MessageType.CHAT);
-        if (source != null && source.getAttacker() != null && !source.getAttacker().equals(player)) {
-            if (source.getAttacker().isPlayer()) {
-                PlayerEntity attacker = (PlayerEntity) source.getAttacker();
-                attacker.playSoundToPlayer(SoundEvent.of(Identifier.of("block.glass.break")),
-                        SoundCategory.PLAYERS,
-                        1.0f,
-                        0.8f);
-            }
+    private void applyStatuses() {
+        player.removeStatusEffect(REGENERATION); //Hacky but regeneration is too strong
+        for (ImmutablePair<RegistryEntry<StatusEffect>, Integer> entry : CONFIG.ddEffects()) {
+            player.removeStatusEffect(entry.left);
+            player.addStatusEffect(new StatusEffectInstance(entry.left, -1, entry.right, false, false, false), player);
         }
     }
 
@@ -209,7 +195,7 @@ public abstract class ServerPlayerEntityMixin extends LivingEntityMixin {
      */
     @Unique
     private void clearStatuses() {
-        for (ImmutablePair<RegistryEntry<StatusEffect>, Integer> entry : effects) {
+        for (ImmutablePair<RegistryEntry<StatusEffect>, Integer> entry : CONFIG.ddEffects()) {
             player.removeStatusEffect(entry.left);
         }
     }
@@ -219,9 +205,15 @@ public abstract class ServerPlayerEntityMixin extends LivingEntityMixin {
      */
     @Unique
     private void applyPenalty() {
-        for (ImmutablePair<RegistryEntry<StatusEffect>, Integer> entry : penalty_effects) {
+        for (ImmutablePair<RegistryEntry<StatusEffect>, ImmutablePair<Integer, Integer>> entry :
+                CONFIG.ddPenaltyEffects()) {
             player.removeStatusEffect(entry.left);
-            player.addStatusEffect(new StatusEffectInstance(entry.left, 15 * 20, entry.right, false, false, true));
+            player.addStatusEffect(new StatusEffectInstance(entry.left,
+                    entry.right.left,
+                    entry.right.right,
+                    false,
+                    false,
+                    true));
         }
     }
 }
