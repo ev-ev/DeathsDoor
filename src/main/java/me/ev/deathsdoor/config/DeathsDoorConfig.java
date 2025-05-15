@@ -25,7 +25,15 @@ public interface DeathsDoorConfig {
 
     String ddTranslation();
 
+    default Text ddMessage(Text playerName, Text attackerName) {
+        return Text.of(ddTranslationAttacker().replace("{{name}}", playerName.getString())
+                                              .replace("{{attacker}}", attackerName.getString()))
+                   .getWithStyle(Style.EMPTY.withColor(ddTranslationColor())).getFirst();
+    }
+
     int ddTranslationColor();
+
+    String ddTranslationAttacker();
 
     default void reload() {
 

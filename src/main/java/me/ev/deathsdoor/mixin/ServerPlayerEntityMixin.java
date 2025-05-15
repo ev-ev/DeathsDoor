@@ -107,9 +107,6 @@ public abstract class ServerPlayerEntityMixin extends LivingEntityMixin {
                 0.0,
                 2.0);
 
-        if (!CONFIG.ddTranslation().isEmpty())
-            Objects.requireNonNull(player.getServer()).getPlayerManager()
-                   .broadcast(CONFIG.ddMessage(player.getName()), true);
         if (source != null && source.getAttacker() != null && !source.getAttacker().equals(player)) {
             if (source.getAttacker().isPlayer()) {
                 PlayerEntity attacker = (PlayerEntity) source.getAttacker();
@@ -118,6 +115,11 @@ public abstract class ServerPlayerEntityMixin extends LivingEntityMixin {
                         1.0f,
                         0.8f);
             }
+            Objects.requireNonNull(player.getServer()).getPlayerManager()
+                   .broadcast(CONFIG.ddMessage(player.getName(), source.getAttacker().getName()), true);
+        } else if (!CONFIG.ddTranslation().isEmpty()) {
+            Objects.requireNonNull(player.getServer()).getPlayerManager()
+                   .broadcast(CONFIG.ddMessage(player.getName()), true);
         }
     }
 

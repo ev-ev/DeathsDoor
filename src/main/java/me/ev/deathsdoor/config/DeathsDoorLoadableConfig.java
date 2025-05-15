@@ -26,6 +26,7 @@ public class DeathsDoorLoadableConfig implements DeathsDoorConfig {
     private static Identifier ddSound;
     private static Identifier ddAttackerSound;
     private static String ddTranslation;
+    private static String ddTranslationAttacker;
     private static Integer ddTranslationColor;
 
     public DeathsDoorLoadableConfig() {
@@ -61,17 +62,21 @@ public class DeathsDoorLoadableConfig implements DeathsDoorConfig {
                 ddAttackerSound = DeathsDoorDefaultConfig.ddAttackerSound;
             if (ddTranslation == null)
                 ddTranslation = DeathsDoorDefaultConfig.ddTranslation;
+            if (ddTranslationAttacker == null)
+                ddTranslationAttacker = DeathsDoorDefaultConfig.ddTranslationAttacker;
             if (ddTranslationColor == null)
                 ddTranslationColor = DeathsDoorDefaultConfig.ddTranslationColor;
 
 
             saveConfig();
         } catch (IOException e) {
+            DeathsDoor.LOGGER.info("Config file missing / inaccessible, creating.");
             ddEffects = new ArrayList<>(DeathsDoorDefaultConfig.ddEffects);
             ddPenaltyEffects = new ArrayList<>(DeathsDoorDefaultConfig.ddPenaltyEffects);
             ddSound = DeathsDoorDefaultConfig.ddSound;
             ddAttackerSound = DeathsDoorDefaultConfig.ddAttackerSound;
             ddTranslation = DeathsDoorDefaultConfig.ddTranslation;
+            ddTranslationAttacker = DeathsDoorDefaultConfig.ddTranslationAttacker;
             ddTranslationColor = DeathsDoorDefaultConfig.ddTranslationColor;
             saveConfig();
         }
@@ -151,8 +156,11 @@ public class DeathsDoorLoadableConfig implements DeathsDoorConfig {
                 case "ddTranslation":
                     ddTranslation = value;
                     break;
+                case "ddTranslationAttacker":
+                    ddTranslationAttacker = value;
+                    break;
                 case "ddTranslationColor":
-                    ddTranslationColor = Integer.parseInt(value);
+                    ddTranslationColor = Integer.parseInt(value, 16);
                     break;
             }
         } catch (NumberFormatException e) {
@@ -167,16 +175,19 @@ public class DeathsDoorLoadableConfig implements DeathsDoorConfig {
             w.write("# Effects to apply on death's door: EffectID,strength. The special DD effect applies the " +
                     "psuedo-wither effect clientside\n");
             writeEffects(w);
-            w.write("# Penalty effects after exiting death's door: EffectID,duration,strength.\n");
+            w.write("\n# Penalty effects after exiting death's door: EffectID,duration,strength.\n");
             writePenaltyEffects(w);
-            w.write("# Sound to play for player hitting death's door\n");
+            w.write("\n# Sound to play for player hitting death's door\n");
             w.write("ddSound : " + ddSound + "\n");
-            w.write("# Sound to play for attacker putting player on death's door\n");
+            w.write("\n# Sound to play for attacker putting player on death's door\n");
             w.write("ddAttackerSound : " + ddAttackerSound + "\n");
-            w.write("# Message to broadcast when player hitting death's door. Leave empty to disable\n");
+            w.write("\n# Message to broadcast when player hitting death's door. Leave empty to disable. Use {{name}} " +
+                    "for player name\n");
             w.write("ddTranslation : " + ddTranslation + "\n");
-            w.write("# Color for death's door broadcast message\n");
-            w.write("ddTranslationColor : " + ddTranslationColor + "\n");
+            w.write("\n# Like above but when player has a damage source. Use {{attacker}} for damage source.\n");
+            w.write("ddTranslationAttacker : " + ddTranslationAttacker + "\n");
+            w.write("\n# Color for death's door broadcast message (RGB as hex)\n");
+            w.write("ddTranslationColor : " + String.format("%06X", ddTranslationColor) + "\n");
         } catch (IOException e) {
             DeathsDoor.LOGGER.error("Failed to make config file!");
         }
@@ -234,6 +245,11 @@ public class DeathsDoorLoadableConfig implements DeathsDoorConfig {
     @Override
     public String ddTranslation() {
         return ddTranslation;
+    }
+
+    @Override
+    public String ddTranslationAttacker() {
+        return ddTranslationAttacker;
     }
 
     @Override

@@ -1,6 +1,12 @@
 # Death's Door
 A serverside fabric mod that changes the way players dropping to "no health" is handled. Instead of the player dying immediately upon dropping to no health, they are instead put in a "psuedo no-health" state wherefrom they can then be killed, however, can be healed out of it.
 
+## Config
+
+The config file is auto created with usage instructions and located in ./config/deaths-door-config.kv
+
+Using the /reload command will refresh the configs without needing a server restart.
+
 ### A story about the idea behind the packet manipulation
 
 When designing the concept for this mod, initially the idea was to have players drop to 0.0 health and this worked fine on client side (i.e. the health bar would be empty and all would work) but as a server-side mod this did not function. This is because even if the packet sent to the player informing them about their death (DeathMessageS2CPacket) is not sent, the packet informing them about their health will cause the client to kill the player.

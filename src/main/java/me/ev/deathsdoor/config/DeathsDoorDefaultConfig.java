@@ -24,6 +24,7 @@ public class DeathsDoorDefaultConfig implements DeathsDoorConfig {
     static final Identifier ddSound = Identifier.of("block.bell.use");
     static final Identifier ddAttackerSound = Identifier.of("block.glass.break");
     static final String ddTranslation = "{{name}} is on death's door!";
+    static final String ddTranslationAttacker = "{{name}} is on death's door by {{attacker}}!";
     static final int ddTranslationColor = 0xd12c2c;
 
     @Override
@@ -50,6 +51,11 @@ public class DeathsDoorDefaultConfig implements DeathsDoorConfig {
     @Override
     public String ddTranslation() {
         return ddTranslation;
+    }
+
+    @Override
+    public String ddTranslationAttacker() {
+        return ddTranslationAttacker;
     }
 
     @Override
