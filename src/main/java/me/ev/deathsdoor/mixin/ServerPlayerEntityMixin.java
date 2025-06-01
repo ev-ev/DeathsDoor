@@ -37,6 +37,8 @@ public abstract class ServerPlayerEntityMixin extends LivingEntityMixin {
     boolean isOnDeathsDoor = false;
     @Unique
     private float lastHealth = 0.0f;
+    @Unique
+    private boolean init = false;
 
     /**
      * Record health before damage
@@ -66,12 +68,19 @@ public abstract class ServerPlayerEntityMixin extends LivingEntityMixin {
     @Override
     public void injectBaseTick(CallbackInfo c1) {
         float h = player.getHealth();
+
         if (h > ddHealth && isOnDeathsDoor) {
             leaveDeathsDoor();
         }
-        if (h <= ddHealth && !isOnDeathsDoor) {
+        if (h <= ddHealth && !isOnDeathsDoor && h != 0.0f) {
             onDeathsDoor(null);
         }
+
+        if (h == 0.0f) { //Bug fix for disconnect revival glitch
+            isOnDeathsDoor = true;
+        }
+
+        init = true;
 
         if (isOnDeathsDoor) {
             player.getServerWorld().spawnParticles(ParticleTypes.RAID_OMEN,
@@ -95,6 +104,12 @@ public abstract class ServerPlayerEntityMixin extends LivingEntityMixin {
         isOnDeathsDoor = true;
         player.setHealth(ddHealth);
         applyStatuses();
+        if (init) {
+            onDeathsDoorFX(source);
+        }
+    }
+
+    private void onDeathsDoorFX(DamageSource source) {
         player.playSoundToPlayer(SoundEvent.of(CONFIG.ddSound()), SoundCategory.PLAYERS, 1.0f, 0.8f);
         //new DDisplayEntity(player); //TODO add text particle?
         player.getServerWorld().spawnParticles(ParticleTypes.RAID_OMEN,
