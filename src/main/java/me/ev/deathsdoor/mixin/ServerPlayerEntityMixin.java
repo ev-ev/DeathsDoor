@@ -36,6 +36,8 @@ public abstract class ServerPlayerEntityMixin extends LivingEntityMixin {
     @Unique
     boolean isOnDeathsDoor = false;
     @Unique
+    boolean die = false;
+    @Unique
     private float lastHealth = 0.0f;
     @Unique
     private boolean init = false;
@@ -49,50 +51,39 @@ public abstract class ServerPlayerEntityMixin extends LivingEntityMixin {
         lastHealth = player.getHealth();
     }
 
+
     /**
-     * Based on health before damage and after damage, determine if player was dropped below (or to) death's door
+     * Based on health before damage and after damage, determine if player was dropped below (or to) death's door. If
+     * is on death's door, if dealt damage, attempt to resist
      */
     @Inject(at = @At("TAIL"), method = "damage")
     private void injectTailApplyDamage(ServerWorld world, DamageSource source, float amount,
                                        CallbackInfoReturnable<Boolean> cir) {
-        if (lastHealth > ddHealth && player.getHealth() <= ddHealth && !isOnDeathsDoor) {
-            //Entered Death's Door
-            onDeathsDoor(source);
+        if (isOnDeathsDoor) {
+            if (cir.getReturnValue()) {
+                if (CONFIG.ddResist() != 0 && (CONFIG.ddResist() > RAND.nextFloat()))
+                    resistDeathsDoor();
+                else
+                    die = true;
+            }
+        } else {
+            if (lastHealth > ddHealth && player.getHealth() <= ddHealth)
+                enterDeathsDoor(source);
         }
+
     }
 
     /**
-     * If the player ever has health above the threshold, leave death's door. If they ever happen to be on or below it
-     * (e.g. reconnecting after disconnecting on death's door) put them on death's door.
+     * Same as enterDeathsDoor but call a different chat message
      */
-    @Override
-    public void injectBaseTick(CallbackInfo c1) {
-        float h = player.getHealth();
+    @Unique
+    private void resistDeathsDoor() {
+        isOnDeathsDoor = true;
+        player.setHealth(ddHealth);
+        applyStatuses();
+        onDeathsDoorFX();
+        resistDeathsDoorChat();
 
-        if (h > ddHealth && isOnDeathsDoor) {
-            leaveDeathsDoor();
-        }
-        if (h <= ddHealth && !isOnDeathsDoor && h != 0.0f) {
-            onDeathsDoor(null);
-        }
-
-        if (h == 0.0f) { //Bug fix for disconnect revival glitch
-            isOnDeathsDoor = true;
-        }
-
-        init = true;
-
-        if (isOnDeathsDoor) {
-            player.getServerWorld().spawnParticles(ParticleTypes.RAID_OMEN,
-                    player.getX(),
-                    player.getY(),
-                    player.getZ(),
-                    1,
-                    0.0,
-                    1.0,
-                    0.0,
-                    1.0);
-        }
     }
 
     /**
@@ -100,41 +91,61 @@ public abstract class ServerPlayerEntityMixin extends LivingEntityMixin {
      * effects (including {@link DeathsDoorEffect}) and play sounds to player (and attacker if any).
      */
     @Unique
-    private void onDeathsDoor(DamageSource source) {
+    private void enterDeathsDoor(DamageSource source) {
         isOnDeathsDoor = true;
         player.setHealth(ddHealth);
         applyStatuses();
         if (init) {
-            onDeathsDoorFX(source);
+            onDeathsDoorFX();
+            onDeathsDoorChat(source);
         }
     }
 
-    private void onDeathsDoorFX(DamageSource source) {
+    /**
+     * Apply status effects (and remove regeneration as that would break the balance of the mod)
+     */
+    @Unique
+    private void applyStatuses() {
+        player.removeStatusEffect(REGENERATION); //Hacky but regeneration is too strong
+        for (ImmutablePair<RegistryEntry<StatusEffect>, Integer> entry : CONFIG.ddEffects()) {
+            player.removeStatusEffect(entry.left);
+            player.addStatusEffect(new StatusEffectInstance(entry.left, -1, entry.right, false, false, false), player);
+        }
+    }
+
+    @Unique
+    private void onDeathsDoorFX() {
         player.playSoundToPlayer(SoundEvent.of(CONFIG.ddSound()), SoundCategory.PLAYERS, 1.0f, 0.8f);
         //new DDisplayEntity(player); //TODO add text particle?
         player.getServerWorld().spawnParticles(ParticleTypes.RAID_OMEN,
-                player.getX(),
-                player.getY(),
-                player.getZ(),
-                10,
-                0.0,
-                1.0,
-                0.0,
-                2.0);
+            player.getX(),
+            player.getY(),
+            player.getZ(),
+            10,
+            0.0,
+            1.0,
+            0.0,
+            2.0);
+    }
 
+    @Unique
+    private void resistDeathsDoorChat() {
+        Objects.requireNonNull(player.getServer()).getPlayerManager()
+            .broadcast(CONFIG.ddMessageResist(player.getName()), true);
+    }
+
+    @Unique
+    private void onDeathsDoorChat(DamageSource source) {
         if (source != null && source.getAttacker() != null && !source.getAttacker().equals(player)) {
             if (source.getAttacker().isPlayer()) {
                 PlayerEntity attacker = (PlayerEntity) source.getAttacker();
-                attacker.playSoundToPlayer(SoundEvent.of(CONFIG.ddAttackerSound()),
-                        SoundCategory.PLAYERS,
-                        1.0f,
-                        0.8f);
+                attacker.playSoundToPlayer(SoundEvent.of(CONFIG.ddAttackerSound()), SoundCategory.PLAYERS, 1.0f, 0.8f);
             }
             Objects.requireNonNull(player.getServer()).getPlayerManager()
-                   .broadcast(CONFIG.ddMessage(player.getName(), source.getAttacker().getName()), true);
+                .broadcast(CONFIG.ddMessage(player.getName(), source.getAttacker().getName()), true);
         } else if (!CONFIG.ddTranslation().isEmpty()) {
             Objects.requireNonNull(player.getServer()).getPlayerManager()
-                   .broadcast(CONFIG.ddMessage(player.getName()), true);
+                .broadcast(CONFIG.ddMessage(player.getName()), true);
         }
     }
 
@@ -149,16 +160,9 @@ public abstract class ServerPlayerEntityMixin extends LivingEntityMixin {
     private void injectionStatusEffectsRemoved(Collection<StatusEffectInstance> effects, CallbackInfo ci) {
         if (effects.stream().anyMatch(t -> t.getEffectType() == DD)) {
             ci.cancel();
-            List<StatusEffectInstance> newList = effects.stream().map(t -> t.getEffectType() != DD ? t
-                                                                                                   :
-                                                                           new StatusEffectInstance(
-                                                                                                           WITHER,
-                                                                                                           -1,
-                                                                                                           0,
-                                                                                                           false,
-                                                                                                           false,
-                                                                                                           false))
-                                                        .toList();
+            List<StatusEffectInstance> newList = effects.stream()
+                .map(t -> t.getEffectType() != DD ? t : new StatusEffectInstance(WITHER, -1, 0, false, false, false))
+                .toList();
             onStatusEffectsRemoved(newList);
         }
     }
@@ -172,8 +176,42 @@ public abstract class ServerPlayerEntityMixin extends LivingEntityMixin {
      */
     @Override
     public void injectIsDead(CallbackInfoReturnable<Boolean> cir) {
-        cir.setReturnValue(cir.getReturnValue() && isOnDeathsDoor);
+        cir.setReturnValue(cir.getReturnValue() && die);
+    }
 
+    /**
+     * If the player ever has health above the threshold, leave death's door. If they ever happen to be on or below it
+     * (e.g. reconnecting after disconnecting on death's door) put them on death's door.
+     */
+    @Override
+    public void injectBaseTick(CallbackInfo c1) {
+        float h = player.getHealth();
+
+        if (die) {
+            player.setHealth(0);
+        }
+
+        if (h == 0.0f) { //Bug fix for disconnect revival glitch
+            die = true;
+        } else if (h <= ddHealth && !isOnDeathsDoor) {
+            enterDeathsDoor(null);
+        } else if (h > ddHealth && isOnDeathsDoor) {
+            leaveDeathsDoor();
+        }
+
+        init = true;
+
+        if (isOnDeathsDoor) {
+            player.getServerWorld().spawnParticles(ParticleTypes.RAID_OMEN,
+                player.getX(),
+                player.getY(),
+                player.getZ(),
+                1,
+                0.0,
+                1.0,
+                0.0,
+                1.0);
+        }
     }
 
     /**
@@ -185,26 +223,14 @@ public abstract class ServerPlayerEntityMixin extends LivingEntityMixin {
         clearStatuses();
         applyPenalty();
         player.getServerWorld().spawnParticles(ParticleTypes.TRIAL_OMEN,
-                player.getX(),
-                player.getY(),
-                player.getZ(),
-                10,
-                0.0,
-                1.0,
-                0.0,
-                2.0);
-    }
-
-    /**
-     * Apply status effects (and remove regeneration as that would break the balance of the mod)
-     */
-    @Unique
-    private void applyStatuses() {
-        player.removeStatusEffect(REGENERATION); //Hacky but regeneration is too strong
-        for (ImmutablePair<RegistryEntry<StatusEffect>, Integer> entry : CONFIG.ddEffects()) {
-            player.removeStatusEffect(entry.left);
-            player.addStatusEffect(new StatusEffectInstance(entry.left, -1, entry.right, false, false, false), player);
-        }
+            player.getX(),
+            player.getY(),
+            player.getZ(),
+            10,
+            0.0,
+            1.0,
+            0.0,
+            2.0);
     }
 
     /**
@@ -223,14 +249,14 @@ public abstract class ServerPlayerEntityMixin extends LivingEntityMixin {
     @Unique
     private void applyPenalty() {
         for (ImmutablePair<RegistryEntry<StatusEffect>, ImmutablePair<Integer, Integer>> entry :
-                CONFIG.ddPenaltyEffects()) {
+            CONFIG.ddPenaltyEffects()) {
             player.removeStatusEffect(entry.left);
             player.addStatusEffect(new StatusEffectInstance(entry.left,
-                    entry.right.left,
-                    entry.right.right,
-                    false,
-                    false,
-                    true));
+                entry.right.left,
+                entry.right.right,
+                false,
+                false,
+                true));
         }
     }
 }

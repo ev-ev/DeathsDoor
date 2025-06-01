@@ -18,7 +18,8 @@ public class DeathsDoorEffect extends StatusEffect {
     /**
      * Never do anything
      */
-    @Override public boolean canApplyUpdateEffect(int duration, int amplifier){
+    @Override
+    public boolean canApplyUpdateEffect(int duration, int amplifier) {
         return false;
     }
 }

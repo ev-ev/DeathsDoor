@@ -11,21 +11,22 @@ import org.slf4j.LoggerFactory;
 import java.util.Random;
 
 public class DeathsDoor implements ModInitializer {
-	public static final String MOD_ID = "deaths-door";
-	public static RegistryEntry<StatusEffect> DD;
-	public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
-	public static final Random R = new Random();
+    public static final String MOD_ID = "deaths-door";
+    public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
+    public static final Random R = new Random();
+    public static final float ddHealth = 0.01f;
+    public static final Random RAND = new Random();
+    public static RegistryEntry<StatusEffect> DD;
+    public static DeathsDoorConfig CONFIG;
 
-	public static DeathsDoorConfig CONFIG;
-
-	public static final float ddHealth = 0.01f;
-	@Override
-	public void onInitialize() {
+    @Override
+    public void onInitialize() {
 
 
-		//Do not register effect so that clients without the mod installed can connect
-		DD = new RegistryEntry.Direct<>(new DeathsDoorEffect());
+        //Do not register effect so that clients without the mod installed can connect
+        DD = new RegistryEntry.Direct<>(new DeathsDoorEffect());
 
-		CONFIG = new DeathsDoorLoadableConfig();
-	}
+        CONFIG = new DeathsDoorLoadableConfig();
+        LOGGER.info("DeathsDoor initialized");
+    }
 }

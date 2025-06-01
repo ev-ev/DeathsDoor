@@ -12,20 +12,22 @@ import static net.minecraft.entity.effect.StatusEffects.*;
 
 public class DeathsDoorDefaultConfig implements DeathsDoorConfig {
     static final List<ImmutablePair<RegistryEntry<StatusEffect>, Integer>> ddEffects =
-            List.of(ImmutablePair.of(DD, 0),
-                    ImmutablePair.of(DARKNESS, 0),
-                    ImmutablePair.of(SLOWNESS, 1),
-                    ImmutablePair.of(WEAKNESS, 0),
-                    ImmutablePair.of(MINING_FATIGUE, 1));
+        List.of(ImmutablePair.of(DD, 0),
+            ImmutablePair.of(DARKNESS, 0),
+            ImmutablePair.of(SLOWNESS, 1),
+            ImmutablePair.of(WEAKNESS, 0),
+            ImmutablePair.of(MINING_FATIGUE, 1));
     static final List<ImmutablePair<RegistryEntry<StatusEffect>, ImmutablePair<Integer, Integer>>>
-            ddPenaltyEffects = List.of(ImmutablePair.of(HUNGER, ImmutablePair.of(15 * 20, 1)),
-            ImmutablePair.of(SLOWNESS, ImmutablePair.of(15 * 20, 0)),
-            ImmutablePair.of(MINING_FATIGUE, ImmutablePair.of(15 * 20, 0)));
+        ddPenaltyEffects = List.of(ImmutablePair.of(HUNGER, ImmutablePair.of(15 * 20, 1)),
+        ImmutablePair.of(SLOWNESS, ImmutablePair.of(15 * 20, 0)),
+        ImmutablePair.of(MINING_FATIGUE, ImmutablePair.of(15 * 20, 0)));
     static final Identifier ddSound = Identifier.of("block.bell.use");
     static final Identifier ddAttackerSound = Identifier.of("block.glass.break");
     static final String ddTranslation = "{{name}} is on death's door!";
     static final String ddTranslationAttacker = "{{name}} is on death's door by {{attacker}}!";
+    static final String ddTranslationResist = "{{name}} resists death!";
     static final int ddTranslationColor = 0xd12c2c;
+    static final float ddResist = 0;
 
     @Override
     public List<ImmutablePair<RegistryEntry<StatusEffect>, Integer>> ddEffects() {
@@ -49,6 +51,16 @@ public class DeathsDoorDefaultConfig implements DeathsDoorConfig {
     }
 
     @Override
+    public String ddTranslationResist() {
+        return ddTranslationResist;
+    }
+
+    @Override
+    public int ddTranslationColor() {
+        return ddTranslationColor;
+    }
+
+    @Override
     public String ddTranslation() {
         return ddTranslation;
     }
@@ -59,7 +71,7 @@ public class DeathsDoorDefaultConfig implements DeathsDoorConfig {
     }
 
     @Override
-    public int ddTranslationColor() {
-        return ddTranslationColor;
+    public float ddResist() {
+        return ddResist;
     }
 }

@@ -10,6 +10,8 @@ import org.apache.commons.lang3.tuple.ImmutablePair;
 import java.util.List;
 
 public interface DeathsDoorConfig {
+
+
     List<ImmutablePair<RegistryEntry<StatusEffect>, Integer>> ddEffects();
 
     List<ImmutablePair<RegistryEntry<StatusEffect>, ImmutablePair<Integer, Integer>>> ddPenaltyEffects();
@@ -18,24 +20,32 @@ public interface DeathsDoorConfig {
 
     Identifier ddAttackerSound();
 
+    default Text ddMessageResist(Text playerName) {
+        return Text.of(ddTranslationResist().replace("{{name}}", playerName.getString()))
+            .getWithStyle(Style.EMPTY.withColor(ddTranslationColor())).getFirst();
+    }
+
+    String ddTranslationResist();
+
+    int ddTranslationColor();
+
     default Text ddMessage(Text playerName) {
         return Text.of(ddTranslation().replace("{{name}}", playerName.getString()))
-                   .getWithStyle(Style.EMPTY.withColor(ddTranslationColor())).getFirst();
+            .getWithStyle(Style.EMPTY.withColor(ddTranslationColor())).getFirst();
     }
 
     String ddTranslation();
 
     default Text ddMessage(Text playerName, Text attackerName) {
         return Text.of(ddTranslationAttacker().replace("{{name}}", playerName.getString())
-                                              .replace("{{attacker}}", attackerName.getString()))
-                   .getWithStyle(Style.EMPTY.withColor(ddTranslationColor())).getFirst();
+                .replace("{{attacker}}", attackerName.getString()))
+            .getWithStyle(Style.EMPTY.withColor(ddTranslationColor())).getFirst();
     }
-
-    int ddTranslationColor();
 
     String ddTranslationAttacker();
 
-    default void reload() {
+    float ddResist();
 
+    default void reload() {
     }
 }

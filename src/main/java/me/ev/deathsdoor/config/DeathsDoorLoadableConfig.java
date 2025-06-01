@@ -10,24 +10,30 @@ import org.apache.commons.lang3.tuple.ImmutablePair;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.IOException;
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import static me.ev.deathsdoor.DeathsDoor.LOGGER;
+
 public class DeathsDoorLoadableConfig implements DeathsDoorConfig {
     private static final Path configPath = Path.of("config/deaths-door-config.kv");
 
     private static List<ImmutablePair<RegistryEntry<StatusEffect>, Integer>> ddEffects = new ArrayList<>();
     private static List<ImmutablePair<RegistryEntry<StatusEffect>, ImmutablePair<Integer, Integer>>> ddPenaltyEffects =
-            new ArrayList<>();
+        new ArrayList<>();
     private static Identifier ddSound;
     private static Identifier ddAttackerSound;
     private static String ddTranslation;
     private static String ddTranslationAttacker;
+    private static String ddTranslationResist;
     private static Integer ddTranslationColor;
+    private static Float ddResist;
 
     public DeathsDoorLoadableConfig() {
         loadConfig();
@@ -52,40 +58,42 @@ public class DeathsDoorLoadableConfig implements DeathsDoorConfig {
                 String value = parts[1].strip();
                 loadKeyValue(key, value);
             }
-            if (ddEffects == null)
-                ddEffects = new ArrayList<>(DeathsDoorDefaultConfig.ddEffects);
-            if (ddPenaltyEffects == null)
-                ddPenaltyEffects = new ArrayList<>(DeathsDoorDefaultConfig.ddPenaltyEffects);
-            if (ddSound == null)
-                ddSound = DeathsDoorDefaultConfig.ddSound;
-            if (ddAttackerSound == null)
-                ddAttackerSound = DeathsDoorDefaultConfig.ddAttackerSound;
-            if (ddTranslation == null)
-                ddTranslation = DeathsDoorDefaultConfig.ddTranslation;
-            if (ddTranslationAttacker == null)
-                ddTranslationAttacker = DeathsDoorDefaultConfig.ddTranslationAttacker;
-            if (ddTranslationColor == null)
-                ddTranslationColor = DeathsDoorDefaultConfig.ddTranslationColor;
+            //If a field is null, initialize it from defaults
+            for (Field field : getClass().getDeclaredFields()) {
+                try {
+                    if (!Modifier.isStatic(field.getModifiers())) continue;
+                    Object value = field.get(null);
+                    Field defaultField = DeathsDoorDefaultConfig.class.getDeclaredField(field.getName());
+                    if (value instanceof List<?> v) {
+                        if (!v.isEmpty()) continue;
+                        field.set(null, new ArrayList<>((List<?>) defaultField.get(null)));
+                    } else if (value == null) {
+                        field.set(null, defaultField.get(null));
+                    }
+                } catch (NoSuchFieldException | IllegalAccessException ignored) {
 
+                }
+            }
 
             saveConfig();
         } catch (IOException e) {
-            DeathsDoor.LOGGER.info("Config file missing / inaccessible, creating.");
+            LOGGER.info("Config file missing / inaccessible, creating.");
             ddEffects = new ArrayList<>(DeathsDoorDefaultConfig.ddEffects);
             ddPenaltyEffects = new ArrayList<>(DeathsDoorDefaultConfig.ddPenaltyEffects);
             ddSound = DeathsDoorDefaultConfig.ddSound;
             ddAttackerSound = DeathsDoorDefaultConfig.ddAttackerSound;
             ddTranslation = DeathsDoorDefaultConfig.ddTranslation;
             ddTranslationAttacker = DeathsDoorDefaultConfig.ddTranslationAttacker;
+            ddTranslationResist = DeathsDoorDefaultConfig.ddTranslationResist;
             ddTranslationColor = DeathsDoorDefaultConfig.ddTranslationColor;
+            ddResist = DeathsDoorDefaultConfig.ddResist;
             saveConfig();
         }
     }
 
     private void loadKeyValue(String key, String value) {
         Method method = Arrays.stream(DeathsDoorDefaultConfig.class.getMethods())
-                              .filter(t -> t.getName().equals(key) && !key.equals("ddMessage")).findFirst()
-                              .orElse(null);
+            .filter(t -> t.getName().equals(key) && !key.equals("ddMessage")).findFirst().orElse(null);
         if (method == null) return;
         try {
             switch (method.getName()) {
@@ -95,8 +103,8 @@ public class DeathsDoorLoadableConfig implements DeathsDoorConfig {
                     for (String effect : effects) {
                         String[] effect_data = effect.strip().split(",");
                         if (effect_data.length != 2) {
-                            DeathsDoor.LOGGER.error("Error in config file, ddEffects malformed KV pair : {}",
-                                    Arrays.toString(effect_data));
+                            LOGGER.error("Error in config file, ddEffects malformed KV pair : {}",
+                                Arrays.toString(effect_data));
                             continue;
                         }
                         RegistryEntry<StatusEffect> status;
@@ -104,19 +112,18 @@ public class DeathsDoorLoadableConfig implements DeathsDoorConfig {
                             status = DeathsDoor.DD;
                             ddPresent = true;
                         } else {
-                            status = Registries.STATUS_EFFECT.getEntry(Identifier.of(effect_data[0].strip()))
-                                                             .orElse(null);
+                            status =
+                                Registries.STATUS_EFFECT.getEntry(Identifier.of(effect_data[0].strip())).orElse(null);
                         }
                         if (status == null) {
-                            DeathsDoor.LOGGER.error("Error in config file, ddEffects no such effect : {}",
-                                    effect_data[0]);
+                            LOGGER.error("Error in config file, ddEffects no such effect : {}", effect_data[0]);
                             continue;
                         }
                         int strength = Integer.parseInt(effect_data[1].strip());
                         ddEffects.add(ImmutablePair.of(status, strength));
                     }
                     if (!ddPresent) {
-                        DeathsDoor.LOGGER.info("DD effect missing from config! Is this a mistake? (deathsdoor:dd)");
+                        LOGGER.info("DD effect missing from config! Is this a mistake? (deathsdoor:dd)");
                     }
                     break;
                 case "ddPenaltyEffects":
@@ -124,20 +131,19 @@ public class DeathsDoorLoadableConfig implements DeathsDoorConfig {
                     for (String penalty : penalties) {
                         String[] penalty_data = penalty.strip().split(",");
                         if (penalty_data.length != 3) {
-                            DeathsDoor.LOGGER.error("Error in config file, ddPenaltyEffects malformed KV pair : {}",
-                                    Arrays.toString(penalty_data));
+                            LOGGER.error("Error in config file, ddPenaltyEffects malformed KV pair : {}",
+                                Arrays.toString(penalty_data));
                             continue;
                         }
                         RegistryEntry<StatusEffect> status;
                         if (penalty_data[0].strip().equals("deathsdoor:dd")) {
                             status = DeathsDoor.DD;
                         } else {
-                            status = Registries.STATUS_EFFECT.getEntry(Identifier.of(penalty_data[0].strip()))
-                                                             .orElse(null);
+                            status =
+                                Registries.STATUS_EFFECT.getEntry(Identifier.of(penalty_data[0].strip())).orElse(null);
                         }
                         if (status == null) {
-                            DeathsDoor.LOGGER.error("Error in config file, ddPenaltyEffects no such effect : {}",
-                                    penalty_data[0]);
+                            LOGGER.error("Error in config file, ddPenaltyEffects no such effect : {}", penalty_data[0]);
                             continue;
                         }
 
@@ -159,37 +165,57 @@ public class DeathsDoorLoadableConfig implements DeathsDoorConfig {
                 case "ddTranslationAttacker":
                     ddTranslationAttacker = value;
                     break;
+                case "ddTranslationResist":
+                    ddTranslationResist = value;
+                    break;
                 case "ddTranslationColor":
                     ddTranslationColor = Integer.parseInt(value, 16);
                     break;
+                case "ddResist":
+                    ddResist = Float.parseFloat(value);
+                    break;
             }
         } catch (NumberFormatException e) {
-            DeathsDoor.LOGGER.error("Error in config file, {} failed to parse integer", key);
+            LOGGER.error("Error in config file, {} failed to parse", key);
         }
 
 
     }
 
+    @SuppressWarnings("TextBlockMigration")
     private void saveConfig() {
         try (BufferedWriter w = Files.newBufferedWriter(configPath)) {
             w.write("# Effects to apply on death's door: EffectID,strength. The special DD effect applies the " +
                     "psuedo-wither effect clientside\n");
             writeEffects(w);
+
             w.write("\n# Penalty effects after exiting death's door: EffectID,duration,strength.\n");
             writePenaltyEffects(w);
+
             w.write("\n# Sound to play for player hitting death's door\n");
             w.write("ddSound : " + ddSound + "\n");
+
             w.write("\n# Sound to play for attacker putting player on death's door\n");
             w.write("ddAttackerSound : " + ddAttackerSound + "\n");
+
             w.write("\n# Message to broadcast when player hitting death's door. Leave empty to disable. Use {{name}} " +
                     "for player name\n");
             w.write("ddTranslation : " + ddTranslation + "\n");
+
             w.write("\n# Like above but when player has a damage source. Use {{attacker}} for damage source.\n");
             w.write("ddTranslationAttacker : " + ddTranslationAttacker + "\n");
+
+            w.write("\n# Like ddTranslation but when player resists death (see ddResist).\n");
+            w.write("ddTranslationResist : " + ddTranslationResist + "\n");
+
             w.write("\n# Color for death's door broadcast message (RGB as hex)\n");
             w.write("ddTranslationColor : " + String.format("%06X", ddTranslationColor) + "\n");
+
+            w.write("\n# Probability of resisting deaths door (value between 0.0 and 1.0, with 0 being no resistance)" +
+                    "\n");
+            w.write("ddResist : " + ddResist + "\n");
         } catch (IOException e) {
-            DeathsDoor.LOGGER.error("Failed to make config file!");
+            LOGGER.error("Failed to make config file!");
         }
     }
 
@@ -212,12 +238,11 @@ public class DeathsDoorLoadableConfig implements DeathsDoorConfig {
         for (ImmutablePair<RegistryEntry<StatusEffect>, ImmutablePair<Integer, Integer>> penalty : ddPenaltyEffects) {
             if (penalty.left == DeathsDoor.DD) {
                 sb.append("deathsdoor:dd, ").append(penalty.right.left).append(", ").append(penalty.right.right)
-                  .append(". ");
+                    .append(". ");
                 continue;
             }
             sb.append(penalty.left.getIdAsString()).append(", ").append(penalty.right.left).append(", ")
-              .append(penalty.right.right)
-              .append(". ");
+                .append(penalty.right.right).append(". ");
         }
         w.write(sb + "\n");
     }
@@ -243,6 +268,16 @@ public class DeathsDoorLoadableConfig implements DeathsDoorConfig {
     }
 
     @Override
+    public String ddTranslationResist() {
+        return ddTranslationResist;
+    }
+
+    @Override
+    public int ddTranslationColor() {
+        return ddTranslationColor;
+    }
+
+    @Override
     public String ddTranslation() {
         return ddTranslation;
     }
@@ -253,8 +288,8 @@ public class DeathsDoorLoadableConfig implements DeathsDoorConfig {
     }
 
     @Override
-    public int ddTranslationColor() {
-        return ddTranslationColor;
+    public float ddResist() {
+        return ddResist;
     }
 
     @Override
