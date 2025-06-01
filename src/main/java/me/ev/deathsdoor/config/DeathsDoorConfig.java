@@ -46,6 +46,8 @@ public interface DeathsDoorConfig {
 
     float ddResist();
 
+    float ddMaxBroadcastDistance();
+
     default void reload() {
     }
 }

@@ -27,7 +27,8 @@ public class DeathsDoorDefaultConfig implements DeathsDoorConfig {
     static final String ddTranslationAttacker = "{{name}} is on death's door by {{attacker}}!";
     static final String ddTranslationResist = "{{name}} resists death!";
     static final int ddTranslationColor = 0xd12c2c;
-    static final float ddResist = 0;
+    static final float ddResist = 0.33f;
+    static final float ddMaxBroadcastDistance = -1.0f;
 
     @Override
     public List<ImmutablePair<RegistryEntry<StatusEffect>, Integer>> ddEffects() {
@@ -73,5 +74,10 @@ public class DeathsDoorDefaultConfig implements DeathsDoorConfig {
     @Override
     public float ddResist() {
         return ddResist;
+    }
+
+    @Override
+    public float ddMaxBroadcastDistance() {
+        return ddMaxBroadcastDistance;
     }
 }

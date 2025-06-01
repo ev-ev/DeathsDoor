@@ -24,9 +24,9 @@ import static me.ev.deathsdoor.DeathsDoor.LOGGER;
 public class DeathsDoorLoadableConfig implements DeathsDoorConfig {
     private static final Path configPath = Path.of("config/deaths-door-config.kv");
 
-    private static List<ImmutablePair<RegistryEntry<StatusEffect>, Integer>> ddEffects = new ArrayList<>();
-    private static List<ImmutablePair<RegistryEntry<StatusEffect>, ImmutablePair<Integer, Integer>>> ddPenaltyEffects =
-        new ArrayList<>();
+    private static final List<ImmutablePair<RegistryEntry<StatusEffect>, Integer>> ddEffects = new ArrayList<>();
+    private static final List<ImmutablePair<RegistryEntry<StatusEffect>, ImmutablePair<Integer, Integer>>>
+        ddPenaltyEffects = new ArrayList<>();
     private static Identifier ddSound;
     private static Identifier ddAttackerSound;
     private static String ddTranslation;
@@ -34,6 +34,7 @@ public class DeathsDoorLoadableConfig implements DeathsDoorConfig {
     private static String ddTranslationResist;
     private static Integer ddTranslationColor;
     private static Float ddResist;
+    private static Float ddMaxBroadcastDistance;
 
     public DeathsDoorLoadableConfig() {
         loadConfig();
@@ -66,7 +67,7 @@ public class DeathsDoorLoadableConfig implements DeathsDoorConfig {
                     Field defaultField = DeathsDoorDefaultConfig.class.getDeclaredField(field.getName());
                     if (value instanceof List<?> v) {
                         if (!v.isEmpty()) continue;
-                        field.set(null, new ArrayList<>((List<?>) defaultField.get(null)));
+                        v.addAll((List) defaultField.get(null));
                     } else if (value == null) {
                         field.set(null, defaultField.get(null));
                     }
@@ -78,15 +79,18 @@ public class DeathsDoorLoadableConfig implements DeathsDoorConfig {
             saveConfig();
         } catch (IOException e) {
             LOGGER.info("Config file missing / inaccessible, creating.");
-            ddEffects = new ArrayList<>(DeathsDoorDefaultConfig.ddEffects);
-            ddPenaltyEffects = new ArrayList<>(DeathsDoorDefaultConfig.ddPenaltyEffects);
-            ddSound = DeathsDoorDefaultConfig.ddSound;
-            ddAttackerSound = DeathsDoorDefaultConfig.ddAttackerSound;
-            ddTranslation = DeathsDoorDefaultConfig.ddTranslation;
-            ddTranslationAttacker = DeathsDoorDefaultConfig.ddTranslationAttacker;
-            ddTranslationResist = DeathsDoorDefaultConfig.ddTranslationResist;
-            ddTranslationColor = DeathsDoorDefaultConfig.ddTranslationColor;
-            ddResist = DeathsDoorDefaultConfig.ddResist;
+            //Initialize fields from default
+            for (Field field : getClass().getDeclaredFields()) {
+                try {
+                    if (!Modifier.isStatic(field.getModifiers())) continue;
+                    Object value = field.get(null);
+                    Field defaultField = DeathsDoorDefaultConfig.class.getDeclaredField(field.getName());
+                    if (value instanceof List<?> v) v.addAll((List) defaultField.get(null));
+                    else field.set(null, defaultField.get(null));
+                } catch (NoSuchFieldException | IllegalAccessException ignored) {
+
+                }
+            }
             saveConfig();
         }
     }
@@ -174,6 +178,9 @@ public class DeathsDoorLoadableConfig implements DeathsDoorConfig {
                 case "ddResist":
                     ddResist = Float.parseFloat(value);
                     break;
+                case "ddMaxBroadcastDistance":
+                    ddMaxBroadcastDistance = Float.parseFloat(value);
+                    break;
             }
         } catch (NumberFormatException e) {
             LOGGER.error("Error in config file, {} failed to parse", key);
@@ -214,6 +221,11 @@ public class DeathsDoorLoadableConfig implements DeathsDoorConfig {
             w.write("\n# Probability of resisting deaths door (value between 0.0 and 1.0, with 0 being no resistance)" +
                     "\n");
             w.write("ddResist : " + ddResist + "\n");
+
+            w.write(
+                "\n# Max distance to other players that will receive DD messages (0 : broadcast only for main player," +
+                " -1 : broadcast to all players)\n");
+            w.write("ddMaxBroadcastDistance : " + ddMaxBroadcastDistance + "\n");
         } catch (IOException e) {
             LOGGER.error("Failed to make config file!");
         }
@@ -290,6 +302,11 @@ public class DeathsDoorLoadableConfig implements DeathsDoorConfig {
     @Override
     public float ddResist() {
         return ddResist;
+    }
+
+    @Override
+    public float ddMaxBroadcastDistance() {
+        return ddMaxBroadcastDistance;
     }
 
     @Override
