@@ -25,41 +25,45 @@ public interface DeathsDoorConfig {
             .getWithStyle(Style.EMPTY.withColor(ddTranslationColor())).getFirst();
     }
 
-    default Text ddMessageResistNS(Text playerName) {
-        return Text.of(ddTranslationResist().replace("{{name}}", playerName.getString()));
-    }
-
     String ddTranslationResist();
 
     int ddTranslationColor();
+
+    default Text ddMessageResistNS(Text playerName) {
+        return Text.of(ddTranslationResist().replace("{{name}}", playerName.getString()));
+    }
 
     default Text ddMessage(Text playerName) {
         return Text.of(ddTranslation().replace("{{name}}", playerName.getString()))
             .getWithStyle(Style.EMPTY.withColor(ddTranslationColor())).getFirst();
     }
+
+    String ddTranslation();
+
     default Text ddMessageNS(Text playerName) {
         return Text.of(ddTranslation().replace("{{name}}", playerName.getString()));
     }
-
-    String ddTranslation();
 
     default Text ddMessage(Text playerName, Text attackerName) {
         return Text.of(ddTranslationAttacker().replace("{{name}}", playerName.getString())
                 .replace("{{attacker}}", attackerName.getString()))
             .getWithStyle(Style.EMPTY.withColor(ddTranslationColor())).getFirst();
     }
-    default Text ddMessageNS(Text playerName, Text attackerName) {
-        return Text.of(ddTranslationAttacker().replace("{{name}}", playerName.getString())
-                .replace("{{attacker}}", attackerName.getString()));
-    }
 
     String ddTranslationAttacker();
+
+    default Text ddMessageNS(Text playerName, Text attackerName) {
+        return Text.of(ddTranslationAttacker().replace("{{name}}", playerName.getString())
+            .replace("{{attacker}}", attackerName.getString()));
+    }
 
     float ddResist();
 
     float ddMaxBroadcastDistance();
 
     boolean ddGlobalBroadcastMessage();
+
+    boolean ddTotemMode();
 
     default void reload() {
     }

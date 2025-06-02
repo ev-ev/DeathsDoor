@@ -61,14 +61,34 @@ public abstract class ServerPlayerEntityMixin extends LivingEntityMixin {
                                        CallbackInfoReturnable<Boolean> cir) {
         if (isOnDeathsDoor) {
             if (cir.getReturnValue()) {
-                if (CONFIG.ddResist() != 0 && (CONFIG.ddResist() > RAND.nextFloat())) resistDeathsDoor();
-                else if (!tryUseDeathProtectorAccessor(source)){
-                    die = true;
-                    player.onDeath(source);
+                if (CONFIG.ddTotemMode()) {
+                    if (tryUseDeathProtectorAccessor(source)) {
+                        resistDeathsDoor();
+                    } else {
+                        die = true;
+                        player.onDeath(source);
+                    }
+                } else {
+                    if (CONFIG.ddResist() != 0 && (CONFIG.ddResist() > RAND.nextFloat())) resistDeathsDoor();
+                    else if (!tryUseDeathProtectorAccessor(source)) {
+                        die = true;
+                        player.onDeath(source);
+                    }
                 }
             }
         } else {
-            if (lastHealth > ddHealth && player.getHealth() <= ddHealth) enterDeathsDoor(source);
+            if (!CONFIG.ddTotemMode()) {
+                if (lastHealth > ddHealth && player.getHealth() <= ddHealth) enterDeathsDoor(source);
+            } else {
+                if (player.getHealth() == 0.0f) {
+                    if (tryUseDeathProtectorAccessor(source)) {
+                        enterDeathsDoor(source);
+                    } else {
+                        die = true;
+                        player.onDeath(source);
+                    }
+                }
+            }
         }
 
     }
@@ -140,7 +160,8 @@ public abstract class ServerPlayerEntityMixin extends LivingEntityMixin {
     private void resistDeathsDoorChat() {
         broadcast(CONFIG.ddMessageResist(player.getName()));
         if (CONFIG.ddGlobalBroadcastMessage()) {
-            Objects.requireNonNull(player.getServer()).getPlayerManager().broadcast(CONFIG.ddMessageResistNS(player.getName()), false);
+            Objects.requireNonNull(player.getServer()).getPlayerManager()
+                .broadcast(CONFIG.ddMessageResistNS(player.getName()), false);
         }
     }
 
@@ -149,12 +170,14 @@ public abstract class ServerPlayerEntityMixin extends LivingEntityMixin {
         if (source != null && source.getAttacker() != null && !source.getAttacker().equals(player)) {
             broadcast(CONFIG.ddMessage(player.getName(), source.getAttacker().getName()));
             if (CONFIG.ddGlobalBroadcastMessage()) {
-                Objects.requireNonNull(player.getServer()).getPlayerManager().broadcast(CONFIG.ddMessageNS(player.getName(), source.getAttacker().getName()), false);
+                Objects.requireNonNull(player.getServer()).getPlayerManager()
+                    .broadcast(CONFIG.ddMessageNS(player.getName(), source.getAttacker().getName()), false);
             }
         } else if (!CONFIG.ddTranslation().isEmpty()) {
             broadcast(CONFIG.ddMessage(player.getName()));
             if (CONFIG.ddGlobalBroadcastMessage()) {
-                Objects.requireNonNull(player.getServer()).getPlayerManager().broadcast(CONFIG.ddMessageNS(player.getName()), false);
+                Objects.requireNonNull(player.getServer()).getPlayerManager()
+                    .broadcast(CONFIG.ddMessageNS(player.getName()), false);
             }
         }
     }

@@ -11,16 +11,15 @@ import static me.ev.deathsdoor.DeathsDoor.DD;
 import static net.minecraft.entity.effect.StatusEffects.*;
 
 public class DeathsDoorDefaultConfig implements DeathsDoorConfig {
-    static final List<ImmutablePair<RegistryEntry<StatusEffect>, Integer>> ddEffects =
-        List.of(ImmutablePair.of(DD, 0),
-            ImmutablePair.of(DARKNESS, 0),
-            ImmutablePair.of(SLOWNESS, 1),
-            ImmutablePair.of(WEAKNESS, 0),
-            ImmutablePair.of(MINING_FATIGUE, 1));
-    static final List<ImmutablePair<RegistryEntry<StatusEffect>, ImmutablePair<Integer, Integer>>>
-        ddPenaltyEffects = List.of(ImmutablePair.of(HUNGER, ImmutablePair.of(15 * 20, 1)),
-        ImmutablePair.of(SLOWNESS, ImmutablePair.of(15 * 20, 0)),
-        ImmutablePair.of(MINING_FATIGUE, ImmutablePair.of(15 * 20, 0)));
+    static final List<ImmutablePair<RegistryEntry<StatusEffect>, Integer>> ddEffects = List.of(ImmutablePair.of(DD, 0),
+        ImmutablePair.of(DARKNESS, 0),
+        ImmutablePair.of(SLOWNESS, 1),
+        ImmutablePair.of(WEAKNESS, 0),
+        ImmutablePair.of(MINING_FATIGUE, 1));
+    static final List<ImmutablePair<RegistryEntry<StatusEffect>, ImmutablePair<Integer, Integer>>> ddPenaltyEffects =
+        List.of(ImmutablePair.of(HUNGER, ImmutablePair.of(15 * 20, 1)),
+            ImmutablePair.of(SLOWNESS, ImmutablePair.of(15 * 20, 0)),
+            ImmutablePair.of(MINING_FATIGUE, ImmutablePair.of(15 * 20, 0)));
     static final Identifier ddSound = Identifier.of("block.bell.use");
     static final Identifier ddAttackerSound = Identifier.of("block.glass.break");
     static final String ddTranslation = "{{name}} is on death's door!";
@@ -30,6 +29,7 @@ public class DeathsDoorDefaultConfig implements DeathsDoorConfig {
     static final float ddResist = 0.33f;
     static final float ddMaxBroadcastDistance = -1.0f;
     static final boolean ddGlobalBroadcastMessage = false;
+    static final boolean ddTotemMode = false;
 
     @Override
     public List<ImmutablePair<RegistryEntry<StatusEffect>, Integer>> ddEffects() {
@@ -85,5 +85,10 @@ public class DeathsDoorDefaultConfig implements DeathsDoorConfig {
     @Override
     public boolean ddGlobalBroadcastMessage() {
         return ddGlobalBroadcastMessage;
+    }
+
+    @Override
+    public boolean ddTotemMode() {
+        return ddTotemMode;
     }
 }

@@ -53,11 +53,12 @@ public abstract class LivingEntityMixin {
     @Shadow
     public abstract void writeCustomDataToNbt(NbtCompound nbt);
 
-    @Shadow
-    protected abstract boolean tryUseDeathProtector(DamageSource source);
 
     @Unique
     public boolean tryUseDeathProtectorAccessor(DamageSource source) {
         return tryUseDeathProtector(source);
     }
+
+    @Shadow
+    protected abstract boolean tryUseDeathProtector(DamageSource source);
 }

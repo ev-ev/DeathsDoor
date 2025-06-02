@@ -37,6 +37,7 @@ public class DeathsDoorLoadableConfig implements DeathsDoorConfig {
     private static Float ddResist;
     private static Float ddMaxBroadcastDistance;
     private static Boolean ddGlobalBroadcastMessage;
+    private static Boolean ddTotemMode;
 
     public DeathsDoorLoadableConfig() {
         loadConfig();
@@ -186,6 +187,9 @@ public class DeathsDoorLoadableConfig implements DeathsDoorConfig {
                 case "ddGlobalBroadcastMessage":
                     ddGlobalBroadcastMessage = Boolean.parseBoolean(value);
                     break;
+                case "ddTotemMode":
+                    ddTotemMode = Boolean.parseBoolean(value);
+                    break;
             }
         } catch (NumberFormatException e) {
             LOGGER.error("Error in config file, {} failed to parse", key);
@@ -223,16 +227,22 @@ public class DeathsDoorLoadableConfig implements DeathsDoorConfig {
             w.write("\n# Color for death's door broadcast message (RGB as hex)\n");
             w.write("ddTranslationColor : " + String.format("%06X", ddTranslationColor) + "\n");
 
-            w.write("\n# Probability of resisting deaths door (value between 0.0 and 1.0, with 0 being no resistance)" +
-                    "\n");
+            w.write(
+                "\n# Probability of resisting deaths door (value between 0.0 and 1.0, with 0 being no resistance). " +
+                "Not applicable with ddTotemMode" +
+                "\n");
             w.write("ddResist : " + ddResist + "\n");
 
-            w.write("\n# Max distance to other players that will receive DD messages (0 : broadcast only for main player," +
+            w.write(
+                "\n# Max distance to other players that will receive DD messages (0 : broadcast only for main player," +
                 " -1 : broadcast to all players)\n");
             w.write("ddMaxBroadcastDistance : " + ddMaxBroadcastDistance + "\n");
 
             w.write("\n# Should action bar messages also be sent in global chat (true / false)\n");
             w.write("ddGlobalBroadcastMessage : " + ddGlobalBroadcastMessage + "\n");
+
+            w.write("\n# Allow players to die normally but change totem behavior to this mod's behavior.\n");
+            w.write("ddTotemMode : " + ddTotemMode + "\n");
         } catch (IOException e) {
             LOGGER.error("Failed to make config file!");
         }
@@ -319,6 +329,11 @@ public class DeathsDoorLoadableConfig implements DeathsDoorConfig {
     @Override
     public boolean ddGlobalBroadcastMessage() {
         return ddGlobalBroadcastMessage;
+    }
+
+    @Override
+    public boolean ddTotemMode() {
+        return ddTotemMode;
     }
 
     @Override
