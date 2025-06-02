@@ -29,6 +29,7 @@ public class DeathsDoorDefaultConfig implements DeathsDoorConfig {
     static final int ddTranslationColor = 0xd12c2c;
     static final float ddResist = 0.33f;
     static final float ddMaxBroadcastDistance = -1.0f;
+    static final boolean ddGlobalBroadcastMessage = false;
 
     @Override
     public List<ImmutablePair<RegistryEntry<StatusEffect>, Integer>> ddEffects() {
@@ -79,5 +80,10 @@ public class DeathsDoorDefaultConfig implements DeathsDoorConfig {
     @Override
     public float ddMaxBroadcastDistance() {
         return ddMaxBroadcastDistance;
+    }
+
+    @Override
+    public boolean ddGlobalBroadcastMessage() {
+        return ddGlobalBroadcastMessage;
     }
 }

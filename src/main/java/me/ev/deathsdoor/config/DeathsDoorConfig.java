@@ -25,6 +25,10 @@ public interface DeathsDoorConfig {
             .getWithStyle(Style.EMPTY.withColor(ddTranslationColor())).getFirst();
     }
 
+    default Text ddMessageResistNS(Text playerName) {
+        return Text.of(ddTranslationResist().replace("{{name}}", playerName.getString()));
+    }
+
     String ddTranslationResist();
 
     int ddTranslationColor();
@@ -32,6 +36,9 @@ public interface DeathsDoorConfig {
     default Text ddMessage(Text playerName) {
         return Text.of(ddTranslation().replace("{{name}}", playerName.getString()))
             .getWithStyle(Style.EMPTY.withColor(ddTranslationColor())).getFirst();
+    }
+    default Text ddMessageNS(Text playerName) {
+        return Text.of(ddTranslation().replace("{{name}}", playerName.getString()));
     }
 
     String ddTranslation();
@@ -41,12 +48,18 @@ public interface DeathsDoorConfig {
                 .replace("{{attacker}}", attackerName.getString()))
             .getWithStyle(Style.EMPTY.withColor(ddTranslationColor())).getFirst();
     }
+    default Text ddMessageNS(Text playerName, Text attackerName) {
+        return Text.of(ddTranslationAttacker().replace("{{name}}", playerName.getString())
+                .replace("{{attacker}}", attackerName.getString()));
+    }
 
     String ddTranslationAttacker();
 
     float ddResist();
 
     float ddMaxBroadcastDistance();
+
+    boolean ddGlobalBroadcastMessage();
 
     default void reload() {
     }

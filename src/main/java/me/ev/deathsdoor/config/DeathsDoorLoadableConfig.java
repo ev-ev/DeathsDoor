@@ -35,6 +35,7 @@ public class DeathsDoorLoadableConfig implements DeathsDoorConfig {
     private static Integer ddTranslationColor;
     private static Float ddResist;
     private static Float ddMaxBroadcastDistance;
+    private static Boolean ddGlobalBroadcastMessage;
 
     public DeathsDoorLoadableConfig() {
         loadConfig();
@@ -181,6 +182,9 @@ public class DeathsDoorLoadableConfig implements DeathsDoorConfig {
                 case "ddMaxBroadcastDistance":
                     ddMaxBroadcastDistance = Float.parseFloat(value);
                     break;
+                case "ddGlobalBroadcastMessage":
+                    ddGlobalBroadcastMessage = Boolean.parseBoolean(value);
+                    break;
             }
         } catch (NumberFormatException e) {
             LOGGER.error("Error in config file, {} failed to parse", key);
@@ -222,10 +226,12 @@ public class DeathsDoorLoadableConfig implements DeathsDoorConfig {
                     "\n");
             w.write("ddResist : " + ddResist + "\n");
 
-            w.write(
-                "\n# Max distance to other players that will receive DD messages (0 : broadcast only for main player," +
+            w.write("\n# Max distance to other players that will receive DD messages (0 : broadcast only for main player," +
                 " -1 : broadcast to all players)\n");
             w.write("ddMaxBroadcastDistance : " + ddMaxBroadcastDistance + "\n");
+
+            w.write("\n# Should action bar messages also be sent in global chat (true / false)\n");
+            w.write("ddGlobalBroadcastMessage : " + ddGlobalBroadcastMessage + "\n");
         } catch (IOException e) {
             LOGGER.error("Failed to make config file!");
         }
@@ -307,6 +313,11 @@ public class DeathsDoorLoadableConfig implements DeathsDoorConfig {
     @Override
     public float ddMaxBroadcastDistance() {
         return ddMaxBroadcastDistance;
+    }
+
+    @Override
+    public boolean ddGlobalBroadcastMessage() {
+        return ddGlobalBroadcastMessage;
     }
 
     @Override
