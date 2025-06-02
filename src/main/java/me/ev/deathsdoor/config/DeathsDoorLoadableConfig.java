@@ -21,6 +21,7 @@ import java.util.List;
 
 import static me.ev.deathsdoor.DeathsDoor.LOGGER;
 
+@SuppressWarnings({"unchecked", "rawtypes"})
 public class DeathsDoorLoadableConfig implements DeathsDoorConfig {
     private static final Path configPath = Path.of("config/deaths-door-config.kv");
 
