@@ -52,7 +52,6 @@ public abstract class ServerPlayerEntityMixin extends LivingEntityMixin {
         lastHealth = player.getHealth();
     }
 
-
     /**
      * Based on health before damage and after damage, determine if player was dropped below (or to) death's door. If
      * is on death's door, if dealt damage, attempt to resist
@@ -63,7 +62,7 @@ public abstract class ServerPlayerEntityMixin extends LivingEntityMixin {
         if (isOnDeathsDoor) {
             if (cir.getReturnValue()) {
                 if (CONFIG.ddResist() != 0 && (CONFIG.ddResist() > RAND.nextFloat())) resistDeathsDoor();
-                else {
+                else if (!tryUseDeathProtectorAccessor(source)){
                     die = true;
                     player.onDeath(source);
                 }

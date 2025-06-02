@@ -2,10 +2,12 @@ package me.ev.deathsdoor.mixin;
 
 import me.ev.deathsdoor.DeathsDoor;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.nbt.NbtCompound;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
@@ -50,4 +52,12 @@ public abstract class LivingEntityMixin {
 
     @Shadow
     public abstract void writeCustomDataToNbt(NbtCompound nbt);
+
+    @Shadow
+    protected abstract boolean tryUseDeathProtector(DamageSource source);
+
+    @Unique
+    public boolean tryUseDeathProtectorAccessor(DamageSource source) {
+        return tryUseDeathProtector(source);
+    }
 }
