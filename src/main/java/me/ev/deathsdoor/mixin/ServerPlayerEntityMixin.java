@@ -14,6 +14,7 @@ import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvent;
 import net.minecraft.text.Text;
 import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
@@ -63,13 +64,13 @@ public abstract class ServerPlayerEntityMixin extends LivingEntityMixin {
             if (cir.getReturnValue()) {
                 if (CONFIG.ddTotemMode()) {
                     if (tryUseDeathProtectorAccessor(source)) {
-                        resistDeathsDoor();
+                        resistDeathsDoor(source);
                     } else {
                         die = true;
                         player.onDeath(source);
                     }
                 } else {
-                    if (CONFIG.ddResist() != 0 && (CONFIG.ddResist() > RAND.nextFloat())) resistDeathsDoor();
+                    if (CONFIG.ddResist() != 0 && (CONFIG.ddResist() > RAND.nextFloat())) resistDeathsDoor(source);
                     else if (!tryUseDeathProtectorAccessor(source)) {
                         die = true;
                         player.onDeath(source);
@@ -97,12 +98,12 @@ public abstract class ServerPlayerEntityMixin extends LivingEntityMixin {
      * Same as enterDeathsDoor but call a different chat message
      */
     @Unique
-    private void resistDeathsDoor() {
+    private void resistDeathsDoor(DamageSource source) {
         isOnDeathsDoor = true;
         player.setHealth(ddHealth);
         applyStatuses();
-        onDeathsDoorFX(null);
-        resistDeathsDoorChat();
+        onDeathsDoorFX(source);
+        resistDeathsDoorChat(source);
 
     }
 
@@ -135,14 +136,19 @@ public abstract class ServerPlayerEntityMixin extends LivingEntityMixin {
 
     @Unique
     private void onDeathsDoorFX(DamageSource source) {
-        player.playSoundToPlayer(SoundEvent.of(CONFIG.ddSound()), SoundCategory.PLAYERS, 1.0f, 0.8f);
+        if (CONFIG.ddPlaySoundAround()) {
+            player.playSoundToPlayer(SoundEvent.of(CONFIG.ddSound()), SoundCategory.PLAYERS, CONFIG.ddSoundVolume(), CONFIG.ddSoundPitch());
+            player.getServerWorld().playSoundFromEntity(player, player, SoundEvent.of(CONFIG.ddSound()), SoundCategory.PLAYERS, CONFIG.ddSoundAroundVolume(), CONFIG.ddSoundPitch());
+        } else {
+            player.playSoundToPlayer(SoundEvent.of(CONFIG.ddSound()), SoundCategory.PLAYERS, CONFIG.ddSoundVolume(), CONFIG.ddSoundPitch());
+        }
 
         if (source != null &&
             source.getAttacker() != null &&
             !source.getAttacker().equals(player) &&
             source.getAttacker().isPlayer()) {
             PlayerEntity attacker = (PlayerEntity) source.getAttacker();
-            attacker.playSoundToPlayer(SoundEvent.of(CONFIG.ddAttackerSound()), SoundCategory.PLAYERS, 1.0f, 0.8f);
+            attacker.playSoundToPlayer(SoundEvent.of(CONFIG.ddAttackerSound()), SoundCategory.PLAYERS, CONFIG.ddAttackerSoundVolume(), CONFIG.ddAttackerSoundPitch());
         }
 
         player.getServerWorld().spawnParticles(ParticleTypes.RAID_OMEN,
@@ -157,8 +163,8 @@ public abstract class ServerPlayerEntityMixin extends LivingEntityMixin {
     }
 
     @Unique
-    private void resistDeathsDoorChat() {
-        broadcast(CONFIG.ddMessageResist(player.getName()));
+    private void resistDeathsDoorChat(DamageSource source) {
+        broadcast(CONFIG.ddMessageResist(player.getName()), source);
         if (CONFIG.ddGlobalBroadcastMessage()) {
             Objects.requireNonNull(player.getServer()).getPlayerManager()
                 .broadcast(CONFIG.ddMessageResistNS(player.getName()), false);
@@ -168,13 +174,13 @@ public abstract class ServerPlayerEntityMixin extends LivingEntityMixin {
     @Unique
     private void onDeathsDoorChat(DamageSource source) {
         if (source != null && source.getAttacker() != null && !source.getAttacker().equals(player)) {
-            broadcast(CONFIG.ddMessage(player.getName(), source.getAttacker().getName()));
+            broadcast(CONFIG.ddMessage(player.getName(), source.getAttacker().getName()), source);
             if (CONFIG.ddGlobalBroadcastMessage()) {
                 Objects.requireNonNull(player.getServer()).getPlayerManager()
                     .broadcast(CONFIG.ddMessageNS(player.getName(), source.getAttacker().getName()), false);
             }
         } else if (!CONFIG.ddTranslation().isEmpty()) {
-            broadcast(CONFIG.ddMessage(player.getName()));
+            broadcast(CONFIG.ddMessage(player.getName()), source);
             if (CONFIG.ddGlobalBroadcastMessage()) {
                 Objects.requireNonNull(player.getServer()).getPlayerManager()
                     .broadcast(CONFIG.ddMessageNS(player.getName()), false);
@@ -183,13 +189,21 @@ public abstract class ServerPlayerEntityMixin extends LivingEntityMixin {
     }
 
     @Unique
-    private void broadcast(Text message) {
+    private void broadcast(Text message, @Nullable DamageSource source) {
+        ServerPlayerEntity src;
+        if (source != null && source.getAttacker() != null && source.getAttacker().isPlayer()) {
+            src = (ServerPlayerEntity) source.getAttacker();
+        } else {
+            src = null;
+        }
+
         if (CONFIG.ddMaxBroadcastDistance() == 0.0f) {
             player.sendMessage(message, true);
+            if (src != null) src.sendMessage(message, true);
         } else if (CONFIG.ddMaxBroadcastDistance() == -1.0f) {
             Objects.requireNonNull(player.getServer()).getPlayerManager().broadcast(message, true);
         } else {
-            player.getServerWorld().getPlayers(t -> t.distanceTo(player) <= CONFIG.ddMaxBroadcastDistance())
+            player.getServerWorld().getPlayers(t -> t == src || t.distanceTo(player) <= CONFIG.ddMaxBroadcastDistance())
                 .forEach(t -> t.sendMessage(message, true));
         }
     }

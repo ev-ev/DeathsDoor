@@ -29,7 +29,13 @@ public class DeathsDoorLoadableConfig implements DeathsDoorConfig {
     private static final List<ImmutablePair<RegistryEntry<StatusEffect>, ImmutablePair<Integer, Integer>>>
         ddPenaltyEffects = new ArrayList<>();
     private static Identifier ddSound;
+    private static Boolean ddPlaySoundAround;
+    private static Float ddSoundVolume;
+    private static Float ddSoundAroundVolume;
+    private static Float ddSoundPitch;
     private static Identifier ddAttackerSound;
+    private static Float ddAttackerSoundVolume;
+    private static Float ddAttackerSoundPitch;
     private static String ddTranslation;
     private static String ddTranslationAttacker;
     private static String ddTranslationResist;
@@ -163,8 +169,26 @@ public class DeathsDoorLoadableConfig implements DeathsDoorConfig {
                 case "ddSound":
                     ddSound = Identifier.of(value);
                     break;
+                case "ddPlaySoundAround":
+                    ddPlaySoundAround = Boolean.parseBoolean(value);
+                    break;
+                case "ddSoundVolume":
+                    ddSoundVolume = Float.parseFloat(value);
+                    break;
+                case "ddSoundAroundVolume":
+                    ddSoundAroundVolume = Float.parseFloat(value);
+                    break;
+                case "ddSoundPitch":
+                    ddSoundPitch = Float.parseFloat(value);
+                    break;
                 case "ddAttackerSound":
                     ddAttackerSound = Identifier.of(value);
+                    break;
+                case "ddAttackerSoundVolume":
+                    ddAttackerSoundVolume = Float.parseFloat(value);
+                    break;
+                case "ddAttackerSoundPitch":
+                    ddAttackerSoundPitch = Float.parseFloat(value);
                     break;
                 case "ddTranslation":
                     ddTranslation = value;
@@ -211,8 +235,26 @@ public class DeathsDoorLoadableConfig implements DeathsDoorConfig {
             w.write("\n# Sound to play for player hitting death's door\n");
             w.write("ddSound : " + ddSound + "\n");
 
+            w.write("\n# Play sound to all players nearby (true) or only to involved player (false)\n");
+            w.write("ddPlaySoundAround : " + ddPlaySoundAround + "\n");
+
+            w.write("\n# Volume of sound to target player\n");
+            w.write("ddSoundVolume : " + ddSoundVolume + "\n");
+
+            w.write("\n# Volume of sound to players nearby target player\n");
+            w.write("ddSoundAroundVolume : " + ddSoundAroundVolume + "\n");
+
+            w.write("\n# Pitch of sound to be played\n");
+            w.write("ddSoundPitch : " + ddSoundPitch + "\n");
+
             w.write("\n# Sound to play for attacker putting player on death's door\n");
             w.write("ddAttackerSound : " + ddAttackerSound + "\n");
+
+            w.write("\n# Volume of attacker sound to be played\n");
+            w.write("ddAttackerSoundVolume : " + ddAttackerSoundVolume + "\n");
+
+            w.write("\n# Pitch of attacker sound to be played\n");
+            w.write("ddAttackerSoundPitch : " + ddAttackerSoundPitch + "\n");
 
             w.write("\n# Message to broadcast when player hitting death's door. Leave empty to disable. Use {{name}} " +
                     "for player name\n");
@@ -227,10 +269,10 @@ public class DeathsDoorLoadableConfig implements DeathsDoorConfig {
             w.write("\n# Color for death's door broadcast message (RGB as hex)\n");
             w.write("ddTranslationColor : " + String.format("%06X", ddTranslationColor) + "\n");
 
-            w.write(
-                "\n# Probability of resisting deaths door (value between 0.0 and 1.0, with 0 being no resistance). " +
-                "Not applicable with ddTotemMode" +
-                "\n");
+            w.write("\n# Probability of resisting deaths door (value between 0.0 and 1.0, with 0 being no resistance)" +
+                    ". " +
+                    "Not applicable with ddTotemMode" +
+                    "\n");
             w.write("ddResist : " + ddResist + "\n");
 
             w.write(
@@ -241,7 +283,8 @@ public class DeathsDoorLoadableConfig implements DeathsDoorConfig {
             w.write("\n# Should action bar messages also be sent in global chat (true / false)\n");
             w.write("ddGlobalBroadcastMessage : " + ddGlobalBroadcastMessage + "\n");
 
-            w.write("\n# Allow players to die normally but change totem behavior to this mod's behavior.\n");
+            w.write(
+                "\n# Allow players to die normally but change totem behavior to this mod's behavior. (true / false)\n");
             w.write("ddTotemMode : " + ddTotemMode + "\n");
         } catch (IOException e) {
             LOGGER.error("Failed to make config file!");
@@ -292,8 +335,38 @@ public class DeathsDoorLoadableConfig implements DeathsDoorConfig {
     }
 
     @Override
+    public boolean ddPlaySoundAround() {
+        return ddPlaySoundAround;
+    }
+
+    @Override
+    public float ddSoundVolume() {
+        return ddSoundVolume;
+    }
+
+    @Override
+    public float ddSoundAroundVolume() {
+        return ddSoundAroundVolume;
+    }
+
+    @Override
+    public float ddSoundPitch() {
+        return ddSoundPitch;
+    }
+
+    @Override
     public Identifier ddAttackerSound() {
         return ddAttackerSound;
+    }
+
+    @Override
+    public float ddAttackerSoundVolume() {
+        return ddAttackerSoundVolume;
+    }
+
+    @Override
+    public float ddAttackerSoundPitch() {
+        return ddAttackerSoundPitch;
     }
 
     @Override

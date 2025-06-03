@@ -21,13 +21,19 @@ public class DeathsDoorDefaultConfig implements DeathsDoorConfig {
             ImmutablePair.of(SLOWNESS, ImmutablePair.of(15 * 20, 0)),
             ImmutablePair.of(MINING_FATIGUE, ImmutablePair.of(15 * 20, 0)));
     static final Identifier ddSound = Identifier.of("block.bell.use");
+    static final boolean ddPlaySoundAround = true;
+    static final float ddSoundVolume = 1.0f;
+    static final float ddSoundAroundVolume = 0.04f;
+    static final float ddSoundPitch = 0.8f;
     static final Identifier ddAttackerSound = Identifier.of("block.glass.break");
+    static final float ddAttackerSoundVolume = 1.0f;
+    static final float ddAttackerSoundPitch = 0.8f;
     static final String ddTranslation = "{{name}} is on death's door!";
     static final String ddTranslationAttacker = "{{name}} is on death's door by {{attacker}}!";
     static final String ddTranslationResist = "{{name}} resists death!";
     static final int ddTranslationColor = 0xd12c2c;
     static final float ddResist = 0.33f;
-    static final float ddMaxBroadcastDistance = -1.0f;
+    static final float ddMaxBroadcastDistance = 15.0f;
     static final boolean ddGlobalBroadcastMessage = false;
     static final boolean ddTotemMode = false;
 
@@ -48,8 +54,38 @@ public class DeathsDoorDefaultConfig implements DeathsDoorConfig {
     }
 
     @Override
+    public boolean ddPlaySoundAround() {
+        return ddPlaySoundAround;
+    }
+
+    @Override
+    public float ddSoundVolume() {
+        return ddSoundVolume;
+    }
+
+    @Override
+    public float ddSoundAroundVolume() {
+        return ddSoundAroundVolume;
+    }
+
+    @Override
+    public float ddSoundPitch() {
+        return ddSoundPitch;
+    }
+
+    @Override
     public Identifier ddAttackerSound() {
         return ddAttackerSound;
+    }
+
+    @Override
+    public float ddAttackerSoundVolume() {
+        return ddAttackerSoundVolume;
+    }
+
+    @Override
+    public float ddAttackerSoundPitch() {
+        return ddAttackerSoundPitch;
     }
 
     @Override

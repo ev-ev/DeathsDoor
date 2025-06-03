@@ -18,7 +18,19 @@ public interface DeathsDoorConfig {
 
     Identifier ddSound();
 
+    boolean ddPlaySoundAround();
+
+    float ddSoundVolume();
+
+    float ddSoundAroundVolume();
+
+    float ddSoundPitch();
+
     Identifier ddAttackerSound();
+
+    float ddAttackerSoundVolume();
+
+    float ddAttackerSoundPitch();
 
     default Text ddMessageResist(Text playerName) {
         return Text.of(ddTranslationResist().replace("{{name}}", playerName.getString()))
