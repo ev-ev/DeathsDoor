@@ -20,8 +20,8 @@ public class DDisplayEntity extends DisplayEntity.TextDisplayEntity {
 
     //If the server crashes before the text de-spawns it will stay forever
     public DDisplayEntity(ServerPlayerEntity player) {
-        super(EntityType.TEXT_DISPLAY, player.getServerWorld());
-        world = player.getServerWorld();
+        super(EntityType.TEXT_DISPLAY, player.getWorld());
+        world = player.getWorld();
 
         this.setText(text);
         this.setPosition(player.getPos().add(0, 1, 0));

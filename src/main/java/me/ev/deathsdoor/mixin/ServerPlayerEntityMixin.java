@@ -138,7 +138,7 @@ public abstract class ServerPlayerEntityMixin extends LivingEntityMixin {
     private void onDeathsDoorFX(DamageSource source) {
         if (CONFIG.ddPlaySoundAround()) {
             player.playSoundToPlayer(SoundEvent.of(CONFIG.ddSound()), SoundCategory.PLAYERS, CONFIG.ddSoundVolume(), CONFIG.ddSoundPitch());
-            player.getServerWorld().playSoundFromEntity(player, player, SoundEvent.of(CONFIG.ddSound()), SoundCategory.PLAYERS, CONFIG.ddSoundAroundVolume(), CONFIG.ddSoundPitch());
+            player.getWorld().playSoundFromEntity(player, player, SoundEvent.of(CONFIG.ddSound()), SoundCategory.PLAYERS, CONFIG.ddSoundAroundVolume(), CONFIG.ddSoundPitch());
         } else {
             player.playSoundToPlayer(SoundEvent.of(CONFIG.ddSound()), SoundCategory.PLAYERS, CONFIG.ddSoundVolume(), CONFIG.ddSoundPitch());
         }
@@ -151,7 +151,7 @@ public abstract class ServerPlayerEntityMixin extends LivingEntityMixin {
             attacker.playSoundToPlayer(SoundEvent.of(CONFIG.ddAttackerSound()), SoundCategory.PLAYERS, CONFIG.ddAttackerSoundVolume(), CONFIG.ddAttackerSoundPitch());
         }
 
-        player.getServerWorld().spawnParticles(ParticleTypes.RAID_OMEN,
+        player.getWorld().spawnParticles(ParticleTypes.RAID_OMEN,
             player.getX(),
             player.getY(),
             player.getZ(),
@@ -203,7 +203,7 @@ public abstract class ServerPlayerEntityMixin extends LivingEntityMixin {
         } else if (CONFIG.ddMaxBroadcastDistance() == -1.0f) {
             Objects.requireNonNull(player.getServer()).getPlayerManager().broadcast(message, true);
         } else {
-            player.getServerWorld().getPlayers(t -> t == src || t.distanceTo(player) <= CONFIG.ddMaxBroadcastDistance())
+            player.getWorld().getPlayers(t -> t == src || t.distanceTo(player) <= CONFIG.ddMaxBroadcastDistance())
                 .forEach(t -> t.sendMessage(message, true));
         }
     }
@@ -261,7 +261,7 @@ public abstract class ServerPlayerEntityMixin extends LivingEntityMixin {
         init = true;
 
         if (isOnDeathsDoor) {
-            player.getServerWorld().spawnParticles(ParticleTypes.RAID_OMEN,
+            player.getWorld().spawnParticles(ParticleTypes.RAID_OMEN,
                 player.getX(),
                 player.getY(),
                 player.getZ(),
@@ -281,7 +281,7 @@ public abstract class ServerPlayerEntityMixin extends LivingEntityMixin {
         isOnDeathsDoor = false;
         clearStatuses();
         applyPenalty();
-        player.getServerWorld().spawnParticles(ParticleTypes.TRIAL_OMEN,
+        player.getWorld().spawnParticles(ParticleTypes.TRIAL_OMEN,
             player.getX(),
             player.getY(),
             player.getZ(),
