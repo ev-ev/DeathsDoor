@@ -1,18 +1,21 @@
-# Death's Door
-A serverside fabric mod that changes the way players dropping to "no health" is handled. Instead of the player dying immediately upon dropping to no health, they are instead put in a "psuedo no-health" state wherefrom they can then be killed, however, can be healed out of it.
+## TemplateDevEnv
+_For Kotlin see [TemplateDevEnvKt](https://github.com/CleanroomMC/TemplateDevEnvKt)_
 
-## Config
+Template workspace for modding Minecraft 1.12.2. Licensed under MIT, it is made for public use.
 
-The config file is auto created with usage instructions and located in ./config/deaths-door-config.kv
+This template runs on Java 21! Currently utilizies **Gradle 8.12** + **[RetroFuturaGradle](https://github.com/GTNewHorizons/RetroFuturaGradle) 1.4.1** + **Forge 14.23.5.2847**.
 
-Using the /reload command will refresh the configs without needing a server restart.
+With **coremod and mixin support** that is easy to configure.
 
-### A story about the idea behind the packet manipulation
+### Instructions:
 
-When designing the concept for this mod, initially the idea was to have players drop to 0.0 health and this worked fine on client side (i.e. the health bar would be empty and all would work) but as a server-side mod this did not function. This is because even if the packet sent to the player informing them about their death (DeathMessageS2CPacket) is not sent, the packet informing them about their health will cause the client to kill the player.
+1. Click `use this template` at the top.
+2. Clone the repository that you have created with this template to your local machine.
+3. Make sure IDEA is using Java 21 for Gradle before you sync the project. Verify this by going to IDEA's `Settings > Build, Execution, Deployment > Build Tools > Gradle > Gradle JVM`.
+4. Open the project folder in IDEA. When prompted, click "Load Gradle Project" as it detects the `build.gradle`, if you weren't prompted, right-click the project's `build.gradle` in IDEA, select `Link Gradle Project`, after completion, hit `Refresh All` in the gradle tab on the right.
+5. Run gradle tasks such as `runClient` and `runServer` in the IDEA gradle tab, or use the auto-imported run configurations like `1. Run Client`.
 
-If instead a threshold of, let's say, 0.01f is used in order to prevent the client from ever being on 0.0 health, the client will have half a heart visible in their health bar. While this works, I did not like very much and was not what I envisioned. Thus, I started thinking about ways to "hack" around this.
-
-At some point in the past I heard that the wither effect makes health black in order to make it harder to see it. As such, an idea arose to apply wither to the client when they are on 0.01f in order to hide the last heart. The only problem is that wither deals DOT, which by the mod's logic would immediately kill the player (since they would be on death's door).
-
-In order to fix this problem, perhaps the client could be 'fooled' into having the wither effect but not take the DOT tick damage from the server. The way this was accomplished was through a 'fake' serverside effect (DeathsDoorEffect) that does nothing which is communicated to the client as the default minecraft wither effect, but since it's not the wither effect on the server, the player never takes damage from it. It is also not saved in the player nbt data since it is not recorded in the registry.
+### Notes:
+- Dependencies script in [gradle/scripts/dependencies.gradle](gradle/scripts/dependencies.gradle), explanations are commented in the file.
+- Publishing script in [gradle/scripts/publishing.gradle](gradle/scripts/publishing.gradle).
+- When writing Mixins on IntelliJ, it is advisable to use latest [MinecraftDev Fork for RetroFuturaGradle](https://github.com/eigenraven/MinecraftDev/releases).
