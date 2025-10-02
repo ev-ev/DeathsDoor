@@ -20,11 +20,11 @@ public class DDisplayEntity extends DisplayEntity.TextDisplayEntity {
 
     //If the server crashes before the text de-spawns it will stay forever
     public DDisplayEntity(ServerPlayerEntity player) {
-        super(EntityType.TEXT_DISPLAY, player.getWorld());
-        world = player.getWorld();
+        super(EntityType.TEXT_DISPLAY, player.getEntityWorld());
+        world = player.getEntityWorld();
 
         this.setText(text);
-        this.setPosition(player.getPos().add(0, 1, 0));
+        this.setPosition(player.getEntityPos().add(0, 1, 0));
         this.setAngles(player.getYaw(),0);
         this.setVelocity(
                         new Vec3d(-1 + R.nextFloat()*2, -1 + R.nextFloat()*2 ,-1 + R.nextFloat()*2).normalize().multiply(0.05));
@@ -38,7 +38,7 @@ public class DDisplayEntity extends DisplayEntity.TextDisplayEntity {
             this.kill(world);
             return;
         }
-        this.setPosition(this.getPos().add(this.getVelocity()));
+        this.setPosition(this.getEntityPos().add(this.getVelocity()));
         this.setVelocity(this.getVelocity().add(0, -0.01f, 0));
 
         ticksAlive -= 1;

@@ -8,6 +8,7 @@ import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.registry.entry.RegistryEntry;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
@@ -15,6 +16,7 @@ import net.minecraft.sound.SoundEvent;
 import net.minecraft.text.Text;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.jetbrains.annotations.Nullable;
+import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
@@ -138,7 +140,7 @@ public abstract class ServerPlayerEntityMixin extends LivingEntityMixin {
     private void onDeathsDoorFX(DamageSource source) {
         if (CONFIG.ddPlaySoundAround()) {
             player.playSoundToPlayer(SoundEvent.of(CONFIG.ddSound()), SoundCategory.PLAYERS, CONFIG.ddSoundVolume(), CONFIG.ddSoundPitch());
-            player.getWorld().playSoundFromEntity(player, player, SoundEvent.of(CONFIG.ddSound()), SoundCategory.PLAYERS, CONFIG.ddSoundAroundVolume(), CONFIG.ddSoundPitch());
+            player.getEntityWorld().playSoundFromEntity(player, player, SoundEvent.of(CONFIG.ddSound()), SoundCategory.PLAYERS, CONFIG.ddSoundAroundVolume(), CONFIG.ddSoundPitch());
         } else {
             player.playSoundToPlayer(SoundEvent.of(CONFIG.ddSound()), SoundCategory.PLAYERS, CONFIG.ddSoundVolume(), CONFIG.ddSoundPitch());
         }
@@ -151,7 +153,7 @@ public abstract class ServerPlayerEntityMixin extends LivingEntityMixin {
             attacker.playSoundToPlayer(SoundEvent.of(CONFIG.ddAttackerSound()), SoundCategory.PLAYERS, CONFIG.ddAttackerSoundVolume(), CONFIG.ddAttackerSoundPitch());
         }
 
-        player.getWorld().spawnParticles(ParticleTypes.RAID_OMEN,
+        player.getEntityWorld().spawnParticles(ParticleTypes.RAID_OMEN,
             player.getX(),
             player.getY(),
             player.getZ(),
@@ -162,11 +164,15 @@ public abstract class ServerPlayerEntityMixin extends LivingEntityMixin {
             2.0);
     }
 
+    @Final
+    @Shadow
+    private MinecraftServer server;
+
     @Unique
     private void resistDeathsDoorChat(DamageSource source) {
         broadcast(CONFIG.ddMessageResist(player.getName()), source);
         if (CONFIG.ddGlobalBroadcastMessage()) {
-            Objects.requireNonNull(player.getServer()).getPlayerManager()
+            Objects.requireNonNull(server).getPlayerManager()
                 .broadcast(CONFIG.ddMessageResistNS(player.getName()), false);
         }
     }
@@ -176,13 +182,13 @@ public abstract class ServerPlayerEntityMixin extends LivingEntityMixin {
         if (source != null && source.getAttacker() != null && !source.getAttacker().equals(player)) {
             broadcast(CONFIG.ddMessage(player.getName(), source.getAttacker().getName()), source);
             if (CONFIG.ddGlobalBroadcastMessage()) {
-                Objects.requireNonNull(player.getServer()).getPlayerManager()
+                Objects.requireNonNull(server).getPlayerManager()
                     .broadcast(CONFIG.ddMessageNS(player.getName(), source.getAttacker().getName()), false);
             }
         } else if (!CONFIG.ddTranslation().isEmpty()) {
             broadcast(CONFIG.ddMessage(player.getName()), source);
             if (CONFIG.ddGlobalBroadcastMessage()) {
-                Objects.requireNonNull(player.getServer()).getPlayerManager()
+                Objects.requireNonNull(server).getPlayerManager()
                     .broadcast(CONFIG.ddMessageNS(player.getName()), false);
             }
         }
@@ -201,9 +207,9 @@ public abstract class ServerPlayerEntityMixin extends LivingEntityMixin {
             player.sendMessage(message, true);
             if (src != null) src.sendMessage(message, true);
         } else if (CONFIG.ddMaxBroadcastDistance() == -1.0f) {
-            Objects.requireNonNull(player.getServer()).getPlayerManager().broadcast(message, true);
+            Objects.requireNonNull(server).getPlayerManager().broadcast(message, true);
         } else {
-            player.getWorld().getPlayers(t -> t == src || t.distanceTo(player) <= CONFIG.ddMaxBroadcastDistance())
+            player.getEntityWorld().getPlayers(t -> t == src || t.distanceTo(player) <= CONFIG.ddMaxBroadcastDistance())
                 .forEach(t -> t.sendMessage(message, true));
         }
     }
@@ -261,7 +267,7 @@ public abstract class ServerPlayerEntityMixin extends LivingEntityMixin {
         init = true;
 
         if (isOnDeathsDoor) {
-            player.getWorld().spawnParticles(ParticleTypes.RAID_OMEN,
+            player.getEntityWorld().spawnParticles(ParticleTypes.RAID_OMEN,
                 player.getX(),
                 player.getY(),
                 player.getZ(),
@@ -281,7 +287,7 @@ public abstract class ServerPlayerEntityMixin extends LivingEntityMixin {
         isOnDeathsDoor = false;
         clearStatuses();
         applyPenalty();
-        player.getWorld().spawnParticles(ParticleTypes.TRIAL_OMEN,
+        player.getEntityWorld().spawnParticles(ParticleTypes.TRIAL_OMEN,
             player.getX(),
             player.getY(),
             player.getZ(),
