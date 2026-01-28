@@ -6,9 +6,7 @@ import net.minecraft.entity.effect.StatusEffect;
 import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.network.packet.s2c.play.PlaySoundS2CPacket;
 import net.minecraft.particle.ParticleTypes;
-import net.minecraft.registry.Registries;
 import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
@@ -139,35 +137,20 @@ public abstract class ServerPlayerEntityMixin extends LivingEntityMixin {
     }
 
     @Unique
-    private static void playSoundToPlayer(ServerPlayerEntity player, SoundEvent entry, SoundCategory category, float volume, float pitch) {
-        PlaySoundS2CPacket packet = new PlaySoundS2CPacket(
-            Registries.SOUND_EVENT.getEntry(entry),
-            category,
-            player.getX(),
-            player.getY(),
-            player.getZ(),
-            volume,
-            pitch,
-            player.getRandom().nextLong()
-        );
-        player.networkHandler.sendPacket(packet);
-    }
-
-    @Unique
     private void onDeathsDoorFX(DamageSource source) {
         if (CONFIG.ddPlaySoundAround()) {
-            playSoundToPlayer(player, SoundEvent.of(CONFIG.ddSound()), SoundCategory.PLAYERS, CONFIG.ddSoundVolume(), CONFIG.ddSoundPitch());
+            player.playSoundToPlayer(SoundEvent.of(CONFIG.ddSound()), SoundCategory.PLAYERS, CONFIG.ddSoundVolume(), CONFIG.ddSoundPitch());
             player.getEntityWorld().playSoundFromEntity(player, player, SoundEvent.of(CONFIG.ddSound()), SoundCategory.PLAYERS, CONFIG.ddSoundAroundVolume(), CONFIG.ddSoundPitch());
         } else {
-            playSoundToPlayer(player, SoundEvent.of(CONFIG.ddSound()), SoundCategory.PLAYERS, CONFIG.ddSoundVolume(), CONFIG.ddSoundPitch());
+            player.playSoundToPlayer(SoundEvent.of(CONFIG.ddSound()), SoundCategory.PLAYERS, CONFIG.ddSoundVolume(), CONFIG.ddSoundPitch());
         }
 
         if (source != null &&
             source.getAttacker() != null &&
             !source.getAttacker().equals(player) &&
             source.getAttacker().isPlayer()) {
-            //PlayerEntity attacker = (PlayerEntity) source.getAttacker();
-            playSoundToPlayer((ServerPlayerEntity) source.getAttacker(), SoundEvent.of(CONFIG.ddAttackerSound()), SoundCategory.PLAYERS, CONFIG.ddAttackerSoundVolume(), CONFIG.ddAttackerSoundPitch());
+            PlayerEntity attacker = (PlayerEntity) source.getAttacker();
+            attacker.playSoundToPlayer(SoundEvent.of(CONFIG.ddAttackerSound()), SoundCategory.PLAYERS, CONFIG.ddAttackerSoundVolume(), CONFIG.ddAttackerSoundPitch());
         }
 
         player.getEntityWorld().spawnParticles(ParticleTypes.RAID_OMEN,
