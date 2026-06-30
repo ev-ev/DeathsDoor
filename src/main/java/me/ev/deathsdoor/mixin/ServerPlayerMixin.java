@@ -283,7 +283,7 @@ public abstract class ServerPlayerMixin extends LivingEntityMixin {
 
         init = true;
 
-        if (isOnDeathsDoor) {
+        if (isOnDeathsDoor && !player.isDeadOrDying()) {
             player.level().sendParticles(ParticleTypes.RAID_OMEN,
                 player.getX(),
                 player.getY(),
