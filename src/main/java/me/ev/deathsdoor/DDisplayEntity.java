@@ -7,6 +7,7 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Display;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.EntityTypes;
 import net.minecraft.world.phys.Vec3;
 
 import static me.ev.deathsdoor.DeathsDoor.R;
@@ -23,7 +24,7 @@ public class DDisplayEntity extends Display.TextDisplay {
 
     //If the server crashes before the text de-spawns it will stay forever
     public DDisplayEntity(ServerPlayer player) {
-        super(EntityType.TEXT_DISPLAY, player.level());
+        super(EntityTypes.TEXT_DISPLAY, player.level());
         world = player.level();
 
         this.setText(text);
