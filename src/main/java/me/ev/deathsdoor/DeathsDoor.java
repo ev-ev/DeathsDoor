@@ -3,8 +3,8 @@ package me.ev.deathsdoor;
 import me.ev.deathsdoor.config.DeathsDoorConfig;
 import me.ev.deathsdoor.config.DeathsDoorLoadableConfig;
 import net.fabricmc.api.ModInitializer;
-import net.minecraft.entity.effect.StatusEffect;
-import net.minecraft.registry.entry.RegistryEntry;
+import net.minecraft.world.effect.MobEffect;
+import net.minecraft.core.Holder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -16,7 +16,7 @@ public class DeathsDoor implements ModInitializer {
     public static final Random R = new Random();
     public static final float ddHealth = 0.01f;
     public static final Random RAND = new Random();
-    public static RegistryEntry<StatusEffect> DD;
+    public static Holder<MobEffect> DD;
     public static DeathsDoorConfig CONFIG;
 
     @Override
@@ -24,7 +24,7 @@ public class DeathsDoor implements ModInitializer {
 
 
         //Do not register effect so that clients without the mod installed can connect
-        DD = new RegistryEntry.Direct<>(new DeathsDoorEffect());
+        DD = new Holder.Direct<>(new DeathsDoorEffect());
 
         CONFIG = new DeathsDoorLoadableConfig();
         LOGGER.info("DeathsDoor initialized");

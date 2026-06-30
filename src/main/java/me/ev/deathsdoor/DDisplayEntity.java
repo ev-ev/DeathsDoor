@@ -1,34 +1,37 @@
 package me.ev.deathsdoor;
 
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.decoration.DisplayEntity;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.text.*;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.network.chat.Style;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.Display;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.phys.Vec3;
 
 import static me.ev.deathsdoor.DeathsDoor.R;
 
 /**
  * Intended to be a "attack" or "damage" particle. WIP.
  */
-public class DDisplayEntity extends DisplayEntity.TextDisplayEntity {
+public class DDisplayEntity extends Display.TextDisplay {
     private int ticksAlive = 20;
-    private final ServerWorld world;
-    private static final MutableText text = Text.literal("DEATH'S DOOR").setStyle(Style.EMPTY.withColor(0x9c0606));
+    private final ServerLevel world;
+    private static final MutableComponent
+        text = Component.literal("DEATH'S DOOR").setStyle(Style.EMPTY.withColor(0x9c0606));
 
 
     //If the server crashes before the text de-spawns it will stay forever
-    public DDisplayEntity(ServerPlayerEntity player) {
-        super(EntityType.TEXT_DISPLAY, player.getEntityWorld());
-        world = player.getEntityWorld();
+    public DDisplayEntity(ServerPlayer player) {
+        super(EntityType.TEXT_DISPLAY, player.level());
+        world = player.level();
 
         this.setText(text);
-        this.setPosition(player.getEntityPos().add(0, 1, 0));
-        this.setAngles(player.getYaw(),0);
-        this.setVelocity(
-                        new Vec3d(-1 + R.nextFloat()*2, -1 + R.nextFloat()*2 ,-1 + R.nextFloat()*2).normalize().multiply(0.05));
-        world.spawnEntity(this);
+        this.setPos(player.position().add(0, 1, 0));
+        this.absSnapRotationTo(player.getYRot(),0);
+        this.setDeltaMovement(
+                        new Vec3(-1 + R.nextFloat() * 2, -1 + R.nextFloat() * 2 , -1 + R.nextFloat() * 2).normalize().scale(0.05));
+        world.addFreshEntity(this);
     }
 
     @Override
@@ -38,8 +41,8 @@ public class DDisplayEntity extends DisplayEntity.TextDisplayEntity {
             this.kill(world);
             return;
         }
-        this.setPosition(this.getEntityPos().add(this.getVelocity()));
-        this.setVelocity(this.getVelocity().add(0, -0.01f, 0));
+        this.setPos(this.position().add(this.getDeltaMovement()));
+        this.setDeltaMovement(this.getDeltaMovement().add(0, -0.01f, 0));
 
         ticksAlive -= 1;
     }

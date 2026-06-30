@@ -1,10 +1,11 @@
 package me.ev.deathsdoor.mixin;
 
 import me.ev.deathsdoor.DeathsDoor;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.damage.DamageSource;
-import net.minecraft.entity.effect.StatusEffectInstance;
-import net.minecraft.storage.WriteView;
+import me.ev.deathsdoor.mixin.ServerPlayerMixin;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.level.storage.ValueOutput;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
@@ -19,15 +20,15 @@ import static me.ev.deathsdoor.DeathsDoor.DD;
 public abstract class LivingEntityMixin {
 
     /**
-     * Used in {@link ServerPlayerEntityMixin#injectIsDead}
+     * Used in {@link ServerPlayerMixin#injectIsDead}
      */
     @SuppressWarnings("CancellableInjectionUsage")
-    @Inject(at = @At("TAIL"), method = "isDead", cancellable = true)
+    @Inject(at = @At("TAIL"), method = "isDeadOrDying", cancellable = true)
     protected void injectIsDead(CallbackInfoReturnable<Boolean> cir) {
     }
 
     /**
-     * Used in {@link ServerPlayerEntityMixin#injectBaseTick}
+     * Used in {@link ServerPlayerMixin#injectBaseTick}
      */
     @Inject(at = @At("HEAD"), method = "baseTick")
     protected void injectBaseTick(CallbackInfo ci) {
@@ -37,28 +38,28 @@ public abstract class LivingEntityMixin {
      * When saving player data, attempting to record the {@link DeathsDoor#DD} effect into NBT fails since it is not in
      * the registry. Thus, it is hot-removed from the effects before processing, then added back.
      */
-    @Inject(at = @At("HEAD"), method = "writeCustomData", cancellable = true)
-    public void injectWriteCustomData(WriteView view, CallbackInfo ci) {
+    @Inject(at = @At("HEAD"), method = "addAdditionalSaveData", cancellable = true)
+    public void injectWriteCustomData(ValueOutput view, CallbackInfo ci) {
         LivingEntity ts = (LivingEntity) (Object) this;
-        if (ts.hasStatusEffect(DD)) {
+        if (ts.hasEffect(DD)) {
             ci.cancel();
-            StatusEffectInstance effect = ts.removeStatusEffectInternal(DD);
+            MobEffectInstance effect = ts.removeEffectNoUpdate(DD);
 
-            writeCustomData(view);
+            addAdditionalSaveData(view);
 
-            ts.addStatusEffect(effect);
+            ts.addEffect(effect);
         }
     }
 
     @Shadow
-    protected abstract void writeCustomData(WriteView view);
+    protected abstract void addAdditionalSaveData(ValueOutput view);
 
 
     @Unique
     public boolean tryUseDeathProtectorAccessor(DamageSource source) {
-        return tryUseDeathProtector(source);
+        return checkTotemDeathProtection(source);
     }
 
     @Shadow
-    protected abstract boolean tryUseDeathProtector(DamageSource source);
+    protected abstract boolean checkTotemDeathProtection(DamageSource source);
 }

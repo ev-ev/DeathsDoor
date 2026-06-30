@@ -3,11 +3,11 @@
   "package": "me.ev.deathsdoor.mixin",
   "compatibilityLevel": "JAVA_21",
   "mixins": [
-    "EntityStatusEffectS2CPacketMixin",
+    "ClientboundUpdateMobEffectPacketMixin",
     "LivingEntityMixin",
-    "PlayerEntityMixin",
+    "PlayerMixin",
     "ReloadCommandMixin",
-    "ServerPlayerEntityMixin"
+    "ServerPlayerMixin"
   ],
   "injectors": {
     "defaultRequire": 1

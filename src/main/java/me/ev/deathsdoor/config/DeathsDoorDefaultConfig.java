@@ -1,31 +1,31 @@
 package me.ev.deathsdoor.config;
 
-import net.minecraft.entity.effect.StatusEffect;
-import net.minecraft.registry.entry.RegistryEntry;
-import net.minecraft.util.Identifier;
+import net.minecraft.world.effect.MobEffect;
+import net.minecraft.core.Holder;
+import net.minecraft.resources.Identifier;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 
 import java.util.List;
 
 import static me.ev.deathsdoor.DeathsDoor.DD;
-import static net.minecraft.entity.effect.StatusEffects.*;
+import static net.minecraft.world.effect.MobEffects.*;
 
 public class DeathsDoorDefaultConfig implements DeathsDoorConfig {
-    static final List<ImmutablePair<RegistryEntry<StatusEffect>, Integer>> ddEffects = List.of(ImmutablePair.of(DD, 0),
+    static final List<ImmutablePair<Holder<MobEffect>, Integer>> ddEffects = List.of(ImmutablePair.of(DD, 0),
         ImmutablePair.of(DARKNESS, 0),
         ImmutablePair.of(SLOWNESS, 1),
         ImmutablePair.of(WEAKNESS, 0),
         ImmutablePair.of(MINING_FATIGUE, 1));
-    static final List<ImmutablePair<RegistryEntry<StatusEffect>, ImmutablePair<Integer, Integer>>> ddPenaltyEffects =
+    static final List<ImmutablePair<Holder<MobEffect>, ImmutablePair<Integer, Integer>>> ddPenaltyEffects =
         List.of(ImmutablePair.of(HUNGER, ImmutablePair.of(15 * 20, 1)),
             ImmutablePair.of(SLOWNESS, ImmutablePair.of(15 * 20, 0)),
             ImmutablePair.of(MINING_FATIGUE, ImmutablePair.of(15 * 20, 0)));
-    static final Identifier ddSound = Identifier.of("block.bell.use");
+    static final Identifier ddSound = Identifier.parse("block.bell.use");
     static final boolean ddPlaySoundAround = true;
     static final float ddSoundVolume = 1.0f;
     static final float ddSoundAroundVolume = 0.04f;
     static final float ddSoundPitch = 0.8f;
-    static final Identifier ddAttackerSound = Identifier.of("block.glass.break");
+    static final Identifier ddAttackerSound = Identifier.parse("block.glass.break");
     static final float ddAttackerSoundVolume = 1.0f;
     static final float ddAttackerSoundPitch = 0.8f;
     static final String ddTranslation = "{{name}} is on death's door!";
@@ -38,13 +38,13 @@ public class DeathsDoorDefaultConfig implements DeathsDoorConfig {
     static final boolean ddTotemMode = false;
 
     @Override
-    public List<ImmutablePair<RegistryEntry<StatusEffect>, Integer>> ddEffects() {
+    public List<ImmutablePair<Holder<MobEffect>, Integer>> ddEffects() {
         System.out.println(ddEffects);
         return ddEffects;
     }
 
     @Override
-    public List<ImmutablePair<RegistryEntry<StatusEffect>, ImmutablePair<Integer, Integer>>> ddPenaltyEffects() {
+    public List<ImmutablePair<Holder<MobEffect>, ImmutablePair<Integer, Integer>>> ddPenaltyEffects() {
         return ddPenaltyEffects;
     }
 

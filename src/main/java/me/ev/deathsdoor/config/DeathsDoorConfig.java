@@ -1,10 +1,10 @@
 package me.ev.deathsdoor.config;
 
-import net.minecraft.entity.effect.StatusEffect;
-import net.minecraft.registry.entry.RegistryEntry;
-import net.minecraft.text.Style;
-import net.minecraft.text.Text;
-import net.minecraft.util.Identifier;
+import net.minecraft.world.effect.MobEffect;
+import net.minecraft.core.Holder;
+import net.minecraft.network.chat.Style;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.Identifier;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 
 import java.util.List;
@@ -12,9 +12,9 @@ import java.util.List;
 public interface DeathsDoorConfig {
 
 
-    List<ImmutablePair<RegistryEntry<StatusEffect>, Integer>> ddEffects();
+    List<ImmutablePair<Holder<MobEffect>, Integer>> ddEffects();
 
-    List<ImmutablePair<RegistryEntry<StatusEffect>, ImmutablePair<Integer, Integer>>> ddPenaltyEffects();
+    List<ImmutablePair<Holder<MobEffect>, ImmutablePair<Integer, Integer>>> ddPenaltyEffects();
 
     Identifier ddSound();
 
@@ -32,40 +32,40 @@ public interface DeathsDoorConfig {
 
     float ddAttackerSoundPitch();
 
-    default Text ddMessageResist(Text playerName) {
-        return Text.of(ddTranslationResist().replace("{{name}}", playerName.getString()))
-            .getWithStyle(Style.EMPTY.withColor(ddTranslationColor())).getFirst();
+    default Component ddMessageResist(Component playerName) {
+        return Component.nullToEmpty(ddTranslationResist().replace("{{name}}", playerName.getString()))
+            .toFlatList(Style.EMPTY.withColor(ddTranslationColor())).getFirst();
     }
 
     String ddTranslationResist();
 
     int ddTranslationColor();
 
-    default Text ddMessageResistNS(Text playerName) {
-        return Text.of(ddTranslationResist().replace("{{name}}", playerName.getString()));
+    default Component ddMessageResistNS(Component playerName) {
+        return Component.nullToEmpty(ddTranslationResist().replace("{{name}}", playerName.getString()));
     }
 
-    default Text ddMessage(Text playerName) {
-        return Text.of(ddTranslation().replace("{{name}}", playerName.getString()))
-            .getWithStyle(Style.EMPTY.withColor(ddTranslationColor())).getFirst();
+    default Component ddMessage(Component playerName) {
+        return Component.nullToEmpty(ddTranslation().replace("{{name}}", playerName.getString()))
+            .toFlatList(Style.EMPTY.withColor(ddTranslationColor())).getFirst();
     }
 
     String ddTranslation();
 
-    default Text ddMessageNS(Text playerName) {
-        return Text.of(ddTranslation().replace("{{name}}", playerName.getString()));
+    default Component ddMessageNS(Component playerName) {
+        return Component.nullToEmpty(ddTranslation().replace("{{name}}", playerName.getString()));
     }
 
-    default Text ddMessage(Text playerName, Text attackerName) {
-        return Text.of(ddTranslationAttacker().replace("{{name}}", playerName.getString())
+    default Component ddMessage(Component playerName, Component attackerName) {
+        return Component.nullToEmpty(ddTranslationAttacker().replace("{{name}}", playerName.getString())
                 .replace("{{attacker}}", attackerName.getString()))
-            .getWithStyle(Style.EMPTY.withColor(ddTranslationColor())).getFirst();
+            .toFlatList(Style.EMPTY.withColor(ddTranslationColor())).getFirst();
     }
 
     String ddTranslationAttacker();
 
-    default Text ddMessageNS(Text playerName, Text attackerName) {
-        return Text.of(ddTranslationAttacker().replace("{{name}}", playerName.getString())
+    default Component ddMessageNS(Component playerName, Component attackerName) {
+        return Component.nullToEmpty(ddTranslationAttacker().replace("{{name}}", playerName.getString())
             .replace("{{attacker}}", attackerName.getString()));
     }
 

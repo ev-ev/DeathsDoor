@@ -1,10 +1,10 @@
 package me.ev.deathsdoor.config;
 
 import me.ev.deathsdoor.DeathsDoor;
-import net.minecraft.entity.effect.StatusEffect;
-import net.minecraft.registry.Registries;
-import net.minecraft.registry.entry.RegistryEntry;
-import net.minecraft.util.Identifier;
+import net.minecraft.world.effect.MobEffect;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.core.Holder;
+import net.minecraft.resources.Identifier;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 
 import java.io.BufferedReader;
@@ -25,8 +25,8 @@ import static me.ev.deathsdoor.DeathsDoor.LOGGER;
 public class DeathsDoorLoadableConfig implements DeathsDoorConfig {
     private static final Path configPath = Path.of("config/deaths-door-config.kv");
 
-    private static final List<ImmutablePair<RegistryEntry<StatusEffect>, Integer>> ddEffects = new ArrayList<>();
-    private static final List<ImmutablePair<RegistryEntry<StatusEffect>, ImmutablePair<Integer, Integer>>>
+    private static final List<ImmutablePair<Holder<MobEffect>, Integer>> ddEffects = new ArrayList<>();
+    private static final List<ImmutablePair<Holder<MobEffect>, ImmutablePair<Integer, Integer>>>
         ddPenaltyEffects = new ArrayList<>();
     private static Identifier ddSound;
     private static Boolean ddPlaySoundAround;
@@ -120,13 +120,13 @@ public class DeathsDoorLoadableConfig implements DeathsDoorConfig {
                                 Arrays.toString(effect_data));
                             continue;
                         }
-                        RegistryEntry<StatusEffect> status;
+                        Holder<MobEffect> status;
                         if (effect_data[0].strip().equals("deathsdoor:dd")) {
                             status = DeathsDoor.DD;
                             ddPresent = true;
                         } else {
                             status =
-                                Registries.STATUS_EFFECT.getEntry(Identifier.of(effect_data[0].strip())).orElse(null);
+                                BuiltInRegistries.MOB_EFFECT.get(Identifier.parse(effect_data[0].strip())).orElse(null);
                         }
                         if (status == null) {
                             LOGGER.error("Error in config file, ddEffects no such effect : {}", effect_data[0]);
@@ -148,12 +148,12 @@ public class DeathsDoorLoadableConfig implements DeathsDoorConfig {
                                 Arrays.toString(penalty_data));
                             continue;
                         }
-                        RegistryEntry<StatusEffect> status;
+                        Holder<MobEffect> status;
                         if (penalty_data[0].strip().equals("deathsdoor:dd")) {
                             status = DeathsDoor.DD;
                         } else {
                             status =
-                                Registries.STATUS_EFFECT.getEntry(Identifier.of(penalty_data[0].strip())).orElse(null);
+                                BuiltInRegistries.MOB_EFFECT.get(Identifier.parse(penalty_data[0].strip())).orElse(null);
                         }
                         if (status == null) {
                             LOGGER.error("Error in config file, ddPenaltyEffects no such effect : {}", penalty_data[0]);
@@ -167,7 +167,7 @@ public class DeathsDoorLoadableConfig implements DeathsDoorConfig {
                     }
                     break;
                 case "ddSound":
-                    ddSound = Identifier.of(value);
+                    ddSound = Identifier.parse(value);
                     break;
                 case "ddPlaySoundAround":
                     ddPlaySoundAround = Boolean.parseBoolean(value);
@@ -182,7 +182,7 @@ public class DeathsDoorLoadableConfig implements DeathsDoorConfig {
                     ddSoundPitch = Float.parseFloat(value);
                     break;
                 case "ddAttackerSound":
-                    ddAttackerSound = Identifier.of(value);
+                    ddAttackerSound = Identifier.parse(value);
                     break;
                 case "ddAttackerSoundVolume":
                     ddAttackerSoundVolume = Float.parseFloat(value);
@@ -294,12 +294,12 @@ public class DeathsDoorLoadableConfig implements DeathsDoorConfig {
     private static void writeEffects(BufferedWriter w) throws IOException {
         StringBuilder sb = new StringBuilder();
         sb.append("ddEffects : ");
-        for (ImmutablePair<RegistryEntry<StatusEffect>, Integer> effect : ddEffects) {
+        for (ImmutablePair<Holder<MobEffect>, Integer> effect : ddEffects) {
             if (effect.left == DeathsDoor.DD) {
                 sb.append("deathsdoor:dd, ").append(effect.right).append(". ");
                 continue;
             }
-            sb.append(effect.left.getIdAsString()).append(", ").append(effect.right).append(". ");
+            sb.append(effect.left.getRegisteredName()).append(", ").append(effect.right).append(". ");
         }
         w.write(sb + "\n");
     }
@@ -307,25 +307,25 @@ public class DeathsDoorLoadableConfig implements DeathsDoorConfig {
     private static void writePenaltyEffects(BufferedWriter w) throws IOException {
         StringBuilder sb = new StringBuilder();
         sb.append("ddPenaltyEffects : ");
-        for (ImmutablePair<RegistryEntry<StatusEffect>, ImmutablePair<Integer, Integer>> penalty : ddPenaltyEffects) {
+        for (ImmutablePair<Holder<MobEffect>, ImmutablePair<Integer, Integer>> penalty : ddPenaltyEffects) {
             if (penalty.left == DeathsDoor.DD) {
                 sb.append("deathsdoor:dd, ").append(penalty.right.left).append(", ").append(penalty.right.right)
                     .append(". ");
                 continue;
             }
-            sb.append(penalty.left.getIdAsString()).append(", ").append(penalty.right.left).append(", ")
+            sb.append(penalty.left.getRegisteredName()).append(", ").append(penalty.right.left).append(", ")
                 .append(penalty.right.right).append(". ");
         }
         w.write(sb + "\n");
     }
 
     @Override
-    public List<ImmutablePair<RegistryEntry<StatusEffect>, Integer>> ddEffects() {
+    public List<ImmutablePair<Holder<MobEffect>, Integer>> ddEffects() {
         return ddEffects;
     }
 
     @Override
-    public List<ImmutablePair<RegistryEntry<StatusEffect>, ImmutablePair<Integer, Integer>>> ddPenaltyEffects() {
+    public List<ImmutablePair<Holder<MobEffect>, ImmutablePair<Integer, Integer>>> ddPenaltyEffects() {
         return ddPenaltyEffects;
     }
 
