@@ -5,7 +5,6 @@ import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
-import net.minecraft.world.entity.player.Player;
 import net.minecraft.network.protocol.game.ClientboundSoundPacket;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -52,7 +51,7 @@ public abstract class ServerPlayerMixin extends LivingEntityMixin {
      * Record health before damage
      */
     @Inject(at = @At("HEAD"), method = "hurtServer")
-    private void injectHeadApplyDamage(ServerLevel world, DamageSource source, float amount,
+    private void injectHeadApplyDamage(ServerLevel level, DamageSource source, float damage,
                                        CallbackInfoReturnable<Boolean> cir) {
         lastHealth = player.getHealth();
     }
@@ -62,7 +61,7 @@ public abstract class ServerPlayerMixin extends LivingEntityMixin {
      * is on death's door, if dealt damage, attempt to resist
      */
     @Inject(at = @At("TAIL"), method = "hurtServer")
-    private void injectTailApplyDamage(ServerLevel world, DamageSource source, float amount,
+    private void injectTailApplyDamage(ServerLevel level, DamageSource source, float damage,
                                        CallbackInfoReturnable<Boolean> cir) {
         if (isOnDeathsDoor) {
             if (cir.getReturnValue()) {
@@ -221,13 +220,13 @@ public abstract class ServerPlayerMixin extends LivingEntityMixin {
         }
 
         if (CONFIG.ddMaxBroadcastDistance() == 0.0f) {
-            player.displayClientMessage(message, true);
-            if (src != null) src.displayClientMessage(message, true);
+            player.sendOverlayMessage(message);
+            if (src != null) src.sendOverlayMessage(message);
         } else if (CONFIG.ddMaxBroadcastDistance() == -1.0f) {
             Objects.requireNonNull(server).getPlayerList().broadcastSystemMessage(message, true);
         } else {
             player.level().getPlayers(t -> t == src || t.distanceTo(player) <= CONFIG.ddMaxBroadcastDistance())
-                .forEach(t -> t.displayClientMessage(message, true));
+                .forEach(t -> t.sendOverlayMessage(message));
         }
     }
 
@@ -283,7 +282,7 @@ public abstract class ServerPlayerMixin extends LivingEntityMixin {
 
         init = true;
 
-        if (isOnDeathsDoor) {
+        if (isOnDeathsDoor && !player.isDeadOrDying()) {
             player.level().sendParticles(ParticleTypes.RAID_OMEN,
                 player.getX(),
                 player.getY(),

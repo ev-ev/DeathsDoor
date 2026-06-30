@@ -1,10 +1,9 @@
 package me.ev.deathsdoor.mixin;
 
 import me.ev.deathsdoor.DeathsDoor;
-import me.ev.deathsdoor.mixin.ServerPlayerMixin;
-import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.level.storage.ValueOutput;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -39,20 +38,21 @@ public abstract class LivingEntityMixin {
      * the registry. Thus, it is hot-removed from the effects before processing, then added back.
      */
     @Inject(at = @At("HEAD"), method = "addAdditionalSaveData", cancellable = true)
-    public void injectWriteCustomData(ValueOutput view, CallbackInfo ci) {
+    public void injectWriteCustomData(ValueOutput output, CallbackInfo ci) {
         LivingEntity ts = (LivingEntity) (Object) this;
         if (ts.hasEffect(DD)) {
             ci.cancel();
             MobEffectInstance effect = ts.removeEffectNoUpdate(DD);
 
-            addAdditionalSaveData(view);
+            addAdditionalSaveData(output);
 
+            assert effect != null;
             ts.addEffect(effect);
         }
     }
 
     @Shadow
-    protected abstract void addAdditionalSaveData(ValueOutput view);
+    protected abstract void addAdditionalSaveData(ValueOutput output);
 
 
     @Unique
@@ -61,5 +61,5 @@ public abstract class LivingEntityMixin {
     }
 
     @Shadow
-    protected abstract boolean checkTotemDeathProtection(DamageSource source);
+    protected abstract boolean checkTotemDeathProtection(DamageSource killingDamage);
 }

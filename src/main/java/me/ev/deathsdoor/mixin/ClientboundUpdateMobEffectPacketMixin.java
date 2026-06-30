@@ -28,14 +28,14 @@ public abstract class ClientboundUpdateMobEffectPacketMixin {
      * effect for the {@link MobEffects#WITHER} effect.
      */
     @Inject(at = @At("HEAD"), method = "write", cancellable = true)
-    private void injectWrite(RegistryFriendlyByteBuf buf, CallbackInfo ci) {
+    private void injectWrite(RegistryFriendlyByteBuf output, CallbackInfo ci) {
         if (ts.getEffect() == DD) {
             ci.cancel();
-            buf.writeVarInt(ts.getEntityId());
-            MobEffect.STREAM_CODEC.encode(buf, MobEffects.WITHER);
-            buf.writeVarInt(ts.getEffectAmplifier());
-            buf.writeVarInt(ts.getEffectDurationTicks());
-            buf.writeByte(flags);
+            output.writeVarInt(ts.getEntityId());
+            MobEffect.STREAM_CODEC.encode(output, MobEffects.WITHER);
+            output.writeVarInt(ts.getEffectAmplifier());
+            output.writeVarInt(ts.getEffectDurationTicks());
+            output.writeByte(flags);
         }
     }
 }

@@ -24,7 +24,7 @@ public class DeathsDoor implements ModInitializer {
 
 
         //Do not register effect so that clients without the mod installed can connect
-        DD = new Holder.Direct<>(new DeathsDoorEffect());
+        DD = Holder.direct(new DeathsDoorEffect());
 
         CONFIG = new DeathsDoorLoadableConfig();
         LOGGER.info("DeathsDoor initialized");

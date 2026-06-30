@@ -226,7 +226,7 @@ public class DeathsDoorLoadableConfig implements DeathsDoorConfig {
     private void saveConfig() {
         try (BufferedWriter w = Files.newBufferedWriter(configPath)) {
             w.write("# Effects to apply on death's door: EffectID,strength. The special DD effect applies the " +
-                    "psuedo-wither effect clientside\n");
+                    "pseudo-wither effect clientside\n");
             writeEffects(w);
 
             w.write("\n# Penalty effects after exiting death's door: EffectID,duration,strength.\n");

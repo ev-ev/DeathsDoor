@@ -13,7 +13,7 @@ import java.util.Collection;
 @Mixin(ReloadCommand.class)
 public abstract class ReloadCommandMixin {
     @Inject(at = @At("TAIL"), method = "reloadPacks")
-    private static void injectTryReloadDataPacks(Collection<String> dataPacks, CommandSourceStack source,
+    private static void injectTryReloadDataPacks(Collection<String> selectedPacks, CommandSourceStack source,
                                                  CallbackInfo ci) {
         DeathsDoor.CONFIG.reload();
     }

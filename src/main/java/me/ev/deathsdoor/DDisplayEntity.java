@@ -12,7 +12,7 @@ import net.minecraft.world.phys.Vec3;
 import static me.ev.deathsdoor.DeathsDoor.R;
 
 /**
- * Intended to be a "attack" or "damage" particle. WIP.
+ * Intended to be an "attack" or "damage" particle. WIP.
  */
 public class DDisplayEntity extends Display.TextDisplay {
     private int ticksAlive = 20;
