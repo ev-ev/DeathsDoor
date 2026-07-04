@@ -4,32 +4,21 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.PlayerEvent;
 
-import static me.ev.deathsdoor.DeathsDoor.registerHandler;
-import static me.ev.deathsdoor.DeathsDoor.unregisterHandler;
+import static me.ev.deathsdoor.DeathsDoor.*;
+import static me.ev.deathsdoor.DeathsDoor.applyStatuses;
 
 public class BaseEventHandler {
-    /*
-    @SubscribeEvent
-    public void onWorldLoadEvent(WorldEvent.Load event) {
-        if (event.getWorld() == null)
-            unregisterHandler();
-        else {
-            if (event.getWorld().isRemote)
-                unregisterHandler();
-            else {
-                registerHandler();
-                world = event.getWorld();
-            }
-        }
-    }*/
-
     private static EntityPlayer thisPlayer = null;
 
     @SubscribeEvent
     public void onPlayerLoggedInEvent(PlayerEvent.PlayerLoggedInEvent event) {
+        if (event.player.world.isRemote) return;
         if (thisPlayer == null) {
             thisPlayer = event.player;
             registerHandler();
+            if (thisPlayer.getEntityData().getBoolean(NBT_onDeathsDoor)) {
+                applyStatuses(thisPlayer);
+            }
         }
     }
 
